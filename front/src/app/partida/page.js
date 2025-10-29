@@ -1,4 +1,4 @@
-'use client' 
+'use client'
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSocket } from "../hooks/useSocket";
@@ -61,7 +61,8 @@ export default function pagina() {
     const [barcosContrincante, setBarcosContrincante] = useState(null);
     const [coordenadasSeleccionadas, setCoordenadasSeleccionadas] = useState([]);
     const [primerCasilla, setPrimerCasilla] = useState(null);
-    const [confirmado, setConfirmado] = useState(false); 
+    const [confirmado, setConfirmado] = useState(false);
+    const [coordenadasContrincante, setCoordenadasContrincante] = useState([]);
     const esJugador1 = Number(idLogged) === Number(id1);
     const [miTurno, setMiTurno] = useState(id1);
     const primerTurno = Number(idLogged) === Number(id1);
@@ -96,8 +97,14 @@ export default function pagina() {
     }
 
     useEffect(() => {
-        
-    })
+        if (barcosContrincante.length > 0) {
+            for (let i = 0; i < barcosContrincante.length; i++) {
+                for (let j = 0; j < barcosContrincante[i].coordenadas.length; j++) {
+                    setCoordenadasContrincante(prev => [...prev, barcosContrincante[i].coordenadas[j]])
+                }
+            }
+        }
+    }, [barcosContrincante])
     useEffect(() => {
         if (!socket || !isConnected || !idLogged) return;
 
@@ -241,7 +248,9 @@ export default function pagina() {
         }
 
     }, [selectedBarcoId])
-
+    function verCoordenadas() {
+        console.log(coordenadasContrincante)
+    }
     function obtenerCasillaEnemy(e) {
         if (miTurno == idLogged) {
             const id = e.target.id;
@@ -320,7 +329,7 @@ export default function pagina() {
         });
     }
 
-    let mensajeHeader = "Ubicá tus barcos, seleccionando un barco y luego las casillas"; 
+    let mensajeHeader = "Ubicá tus barcos, seleccionando un barco y luego las casillas";
     if (barcosColocados.length == 5 && !confirmado) {
         mensajeHeader = "No te olvides de apretar Confirmar";
     }
@@ -627,7 +636,9 @@ export default function pagina() {
                         </div>
                     </div>
                 </div>
+                <button onClick={verCoordenadas}> probando</button>
             </section>
+
 
         </>
     )
