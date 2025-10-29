@@ -65,6 +65,7 @@ export default function pagina() {
     const esJugador1 = Number(idLogged) === Number(id1);
     const [miTurno, setMiTurno] = useState(id1);
     const primerTurno = Number(idLogged) === Number(id1);
+    let mensajeAtaca = ""
 
     function obtenerCasilla(e) {
         const id = e.target.id;
@@ -327,12 +328,17 @@ export default function pagina() {
     if (confirmado) {
         mensajeHeader = "¡A jugar!";
     }
+    if (miTurno == idLogged) {
+        mensajeAtaca = "¡Tu turno!"
+    }else{
+        mensajeAtaca = "Turno Rival"
+    }
 
     return (
         <>
             <section className={styles.header}>
                 <h1>
-                    {mensajeHeader}
+                    {mensajeHeader} - {mensajeAtaca}
                 </h1>
                 <br></br>
             </section>
@@ -628,6 +634,7 @@ export default function pagina() {
                     </div>
                 </div>
             </section>
+
 
         </>
     )
