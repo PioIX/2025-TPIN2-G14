@@ -121,7 +121,6 @@ app.post('/crearPartida', async function (req, res) {
   try {
     console.log("Datos recibidos:", req.body);
 
-    // Insertar la partida y obtener el insertId directamente
     const resultado = await realizarQuery(`
       INSERT INTO Partidas (id_ganador, barcos_hundidos_j1, barcos_hundidos_j2)
       VALUES (NULL, 0, 0)
@@ -131,7 +130,6 @@ app.post('/crearPartida', async function (req, res) {
 
     console.log("ID partida creada:", idPartida);
 
-    // Insertar jugadores en la partida
     await realizarQuery(`
       INSERT INTO JugadoresPorPartida (id_partida, id_jugador)
       VALUES (${idPartida}, ${req.body.jugador1}), (${idPartida}, ${req.body.jugador2})

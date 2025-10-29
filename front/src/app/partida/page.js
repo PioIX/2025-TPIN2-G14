@@ -270,7 +270,7 @@ export default function pagina() {
         <>
             <section className={styles.header}>
                 <h1>
-                    Numero de partida:  {idPartida} - {mensajeHeader}
+                    {mensajeHeader}
                 </h1>
                 <br></br>
             </section>
