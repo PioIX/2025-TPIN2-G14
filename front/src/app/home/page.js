@@ -281,10 +281,6 @@ export default function Home() {
         setNombresEnLinea(usuariosCompletos);
     }
 
-    //cuando tocas en PC1 el crear partida y elegis un jugador (de 
-    // los que estan en linea (rooms)) a PC2
-    // le aparece un aviso popup para unirse a la partida)
-
     function irReglas() {
         let url = "/reglas";
         router.push(url);
@@ -341,7 +337,6 @@ export default function Home() {
 
                             </div>
 
-
                         </PopUp>
                     </div>
                     <div>
@@ -383,11 +378,6 @@ export default function Home() {
                 </div>
 
             </PopUp>
-
-
-
-
-
         </>
 
     )

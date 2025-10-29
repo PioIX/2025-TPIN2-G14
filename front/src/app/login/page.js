@@ -87,32 +87,7 @@ export default function Login() {
         }
       });
   }
-  /*async function register() {
-        let data = {
-            nombre: nombre,
-            contraseña: contraseña,
-            email: mail,
-            user: user
-        };
-
-        fetch('http://localhost:4000/register', {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data)
-        })
-            .then(response => response.json())
-            .then(response => {
-                if (response.res) {
-                    setInicio(1);
-                    let url = "/home?idLogged=" + response.idLogged + "&user=" + user;
-                    router.push(url)
-                } else {
-                    setInicio(2);
-                }
-            })
-    }*/
+  
   async function register() {
     let data = {
       nombre: nombre,

@@ -8,12 +8,14 @@
     width:auto;
     border-radius: 5rem;
 }
+
 .header {
     text-align: center;
-    padding: 1rem;
     background-color:#0c7272;
     border-radius: 2rem;
-    width:20rem;
+    width:24rem;
+    display: flex;
+    align-items: center;
     justify-content: center;
     height:3rem;
     font-size: 0.5rem;
