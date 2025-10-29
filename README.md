@@ -40,7 +40,7 @@ Se indica si el tiro fue **agua**, **tocado** o **hundido**, y el juego termina 
   - Si hay un barco → **impacto**.
   - Si no hay un barco → **agua**.
 - Cuando se impacta una coordenada:
-  - `Vuelve a jugar hasta a fallar`
+  - Vuelve a jugar hasta a fallar
 
 ### Fin del juego
 - Gana el jugador que **hunde todos los barcos** del oponente.

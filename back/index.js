@@ -309,6 +309,33 @@ io.on("connection", (socket) => {
       imagen1: data.imagen1
     });
   });
+  socket.on("enviar_disparo", async data =>{
+    console.log("Enviando disparo: ", data.casilla, " a jugador: ", data.receptor)
+
+    io.to(data.room).emit("recibir_disparo", {
+      receptor: data.receptor,
+      casilla: data.casilla,
+      emisor: data.emisor
+    }
+    )
+  })
+  socket.on("cambiar_turno", async data =>{
+    console.log("Era turno de: ", data.emisor, " ahora es turno de: ", data.receptor)
+
+    io.to(data.room).emit("aceptar_turno", {
+      receptor: data.receptor,
+      emisor: data.emisor
+    })
+  })
+  socket.on("enviar_barcos", async data => {
+    console.log("Enviando barcos: ", data.barcos, " a jugador: ", data.jugador2)
+    
+    io.to(data.room).emit('recibir_barcos', {
+      receptor: data.jugador2,
+      barcos: data.barcos,
+      emisor: data.jugador1
+    })
+  })
   socket.on("enviar_partidaId", async data => {
     console.log("Enviando id: ", data.partidId, " a jugador: ", data.jugador2)
 

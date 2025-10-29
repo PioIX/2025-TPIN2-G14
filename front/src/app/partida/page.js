@@ -58,10 +58,13 @@ export default function pagina() {
     const [selectedBarco, setSelectedBarco] = useState(null);
     const [selectedBarcoId, setSelectedBarcoId] = useState(null);
     const [barcosColocados, setBarcosColocados] = useState([]);
+    const [barcosContrincante, setBarcosContrincante] = useState(null);
     const [coordenadasSeleccionadas, setCoordenadasSeleccionadas] = useState([]);
     const [primerCasilla, setPrimerCasilla] = useState(null);
     const [confirmado, setConfirmado] = useState(false); 
     const esJugador1 = Number(idLogged) === Number(id1);
+    const [miTurno, setMiTurno] = useState(id1);
+    const primerTurno = Number(idLogged) === Number(id1);
 
     function obtenerCasilla(e) {
         const id = e.target.id;
@@ -92,6 +95,54 @@ export default function pagina() {
         return null;
     }
 
+    useEffect(() => {
+        
+    })
+    useEffect(() => {
+        if (!socket || !isConnected || !idLogged) return;
+
+        console.log("Uniéndose a sala:", idPartida, "Usuario:", idLogged);
+        socket.emit("joinRoom", {
+            room: idPartida,
+            userId: Number(idLogged)
+        });
+        socket.on("recibir_barcos", data => {
+            if (data.emisor != idLogged) {
+                console.log("Barcos recibidos de ", data.emisor, ": ", data.barcos);
+                setBarcosContrincante(data.barcos);
+            }
+        });
+        socket.on("aceptar_turno", data => {
+            console.log("ñañañañañañañañ")
+            if (data.receptor == Number(idLogged)) {
+                setMiTurno(data.receptor)
+                console.log("Es mi turno")
+            }
+        })
+
+    })
+    useEffect(() => {
+        if (!socket || !isConnected || !idLogged) return;
+        //cambiar de turno cada vez que hace disparo 
+        if (idLogged == id2) {
+            socket.emit("cambiar_turno", {
+                receptor: id1,
+                emisor: idLogged,
+                room: idPartida
+            })
+            console.log("Ya no es mi turno, es de: ", id1)
+            setMiTurno(id1)
+        } else if (idLogged == id1) {
+            socket.emit("cambiar_turno", {
+                receptor: id2,
+                emisor: idLogged,
+                room: idPartida
+            })
+            console.log("Ya no es mi turno, es de: ", id2)
+            setMiTurno(id2)
+        }
+
+    }, [selectedCasillaEnemy])
     useEffect(() => {
         console.log(coordenadasSeleccionadas);
         console.log("primer casilla: ", primerCasilla);
@@ -181,6 +232,7 @@ export default function pagina() {
         }
     }, [coordenadasSeleccionadas, selectedBarco, primerCasilla]);
 
+
     useEffect(() => {
         for (let i = 0; i < barcosInfo.length; i++) {
             if (barcosInfo[i].id == selectedBarcoId) {
@@ -191,9 +243,12 @@ export default function pagina() {
     }, [selectedBarcoId])
 
     function obtenerCasillaEnemy(e) {
-        const id = e.target.id;
-        setSelectedCasillaEnemy(id)
-        console.log(id, " enemigo"); // A1-enemy, B2-enemy, etc.
+        if (miTurno == idLogged) {
+            const id = e.target.id;
+            setSelectedCasillaEnemy(id)
+            console.log(id, " enemigo"); // A1-enemy, B2-enemy, etc.
+        }
+
         // hacer algo con el id
     }
 
@@ -227,7 +282,7 @@ export default function pagina() {
             return mismaColumna && consecutivas;
         }
     }
-    
+
     async function confirmar() {
         if (barcosColocados.length != 5) {
             alert("Poné los 5 barcos primero");
@@ -256,6 +311,13 @@ export default function pagina() {
             console.error("Error en /agregarBarco:", error);
             alert("Error al conectar con el servidor");
         }
+        console.log("enviando barcos al contrincante");
+        socket.emit("enviar_barcos", {
+            room: idPartida,
+            jugador2: esJugador1 ? Number(id2) : Number(id1),
+            barcos: barcosColocados,
+            jugador1: Number(idLogged)
+        });
     }
 
     let mensajeHeader = "Ubicá tus barcos, seleccionando un barco y luego las casillas"; 
@@ -276,7 +338,6 @@ export default function pagina() {
             </section>
             <section className={styles.juego}>
                 {/* Tablero del jugador loggeado (izquierda) */}
-
                 <div className={styles.tableroContainer}>
 
                     <div className={styles.encabezadoTablero}>
@@ -567,7 +628,7 @@ export default function pagina() {
                     </div>
                 </div>
             </section>
-            <button onClick={verSelectedBarco}>ver barco</button>
+
         </>
     )
 }
