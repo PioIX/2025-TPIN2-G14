@@ -252,7 +252,7 @@ const maxPlayers = 3;
 let players = 0;
 
 let jugadoresEnPartida = [];
-let disparo = false;
+
 
 // ============= SOCKET.IO =============
 io.on("connection", (socket) => {
@@ -317,17 +317,17 @@ io.on("connection", (socket) => {
       imagen1: data.imagen1
     });
   });
+
   socket.on("enviar_disparo", async data => {
     console.log("Disparo recibido desde : ", data.emisor, " a jugador: ", data.receptor, " a la casilla: ", data.casilla)
 
-    jugadoresEnPartida.map((jugador)=>{
-      if(jugador.id == data.receptor){
-        if(jugador.casillas.includes(data.casilla)){
+    jugadoresEnPartida.map((jugador) => {
+      if (jugador.id == data.receptor) {
+        if (jugador.casillas.includes(data.casilla)) {
           disparo = true
         }
       }
     })
-
 
     io.to(data.room).emit("recibir_disparo", {
       receptor: data.receptor,
@@ -348,6 +348,7 @@ io.on("connection", (socket) => {
     console.log("Recibiendo barcos de: ", data.jugador, " sus barcos son: ", data.barcos)
 
     players++;
+    let disparo = false;
 
     if (players < maxPlayers) {
       jugadoresEnPartida.push({
@@ -356,7 +357,12 @@ io.on("connection", (socket) => {
         barcos: data.barcos
       })
     }
-
+    if (jugadoresEnPartida.length == 2) {
+      socket.to(data.room).emit("partida_iniciada", {
+        partidaIniciada: true,
+        idPartida: data.room
+      })
+    }
 
     /*io.to(data.room).emit('recibir_barcos', {
       receptor: data.jugador2,

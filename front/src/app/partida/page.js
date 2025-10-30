@@ -64,9 +64,10 @@ export default function pagina() {
     const [confirmado, setConfirmado] = useState(false);
     const [coordenadasContrincante, setCoordenadasContrincante] = useState([]);
     const esJugador1 = Number(idLogged) === Number(id1);
-    const [miTurno, setMiTurno] = useState(id1);
+    const [miTurno, setMiTurno] = useState(Number(id1)); // ✅ Convertir a número desde el inicio
     const primerTurno = Number(idLogged) === Number(id1);
     const [casillasUsadas, setCasillasUsadas] = useState([]);
+    const [partidaIniciada, setPartidaIniciada] = useState(false);
 
     function obtenerCasilla(e) {
         const id = e.target.id;
@@ -74,7 +75,7 @@ export default function pagina() {
             setPrimerCasilla(id)
         }
         setCoordenadasSeleccionadas(prev => [...prev, id]);
-        setCoordenadasUsadas(prev => [...prev, id]); // Agrega nuevas coordenadas al arreglo
+        setCasillasUsadas(prev => [...prev, id]); // Agrega nuevas coordenadas al arreglo
         // hacer algo con el id
     }
 
@@ -98,7 +99,7 @@ export default function pagina() {
         return null;
     }
 
-    useEffect(() => {
+    /*useEffect(() => {
         if (barcosContrincante.length > 0) {
             for (let i = 0; i < barcosContrincante.length; i++) {
                 for (let j = 0; j < barcosContrincante[i].coordenadas.length; j++) {
@@ -106,7 +107,33 @@ export default function pagina() {
                 }
             }
         }
-    }, [barcosContrincante])
+    }, [barcosContrincante])*/
+    useEffect(() => {
+        if (!socket || !isConnected || !idLogged) return;
+
+        const handlePartidaIniciada = (data) => {
+            if (data.idPartida == idPartida) {
+                setPartidaIniciada(true)
+            }
+        };
+
+        socket.on("partida_iniciada", handlePartidaIniciada);
+
+        // ✅ AGREGAR CLEANUP
+        return () => {
+            socket.off("partida_iniciada", handlePartidaIniciada);
+        };
+    }, [socket, isConnected, idLogged, idPartida])
+    useEffect(() => {
+        if (!socket || !isConnected || !idLogged) return;
+
+        socket.on("recibir_disparo", data => {
+            if (data.receptor == Number(idLogged)) {
+                alert("OA PERRITO TE DISPARARON EN " + data.casilla)
+                console.log("Disparo recibido en ", data.casilla, " de ", data.emisor);
+            }
+        })
+    }, [socket, isConnected, idLogged])
     useEffect(() => {
         if (!socket || !isConnected || !idLogged) return;
 
@@ -128,9 +155,9 @@ export default function pagina() {
             }
         })
 
-    })
+    }, [socket, isConnected, idLogged, idPartida])
     useEffect(() => {
-        if (!socket || !isConnected || !idLogged) return;
+        if (!socket || !isConnected || !idLogged || !selectedCasillaEnemy) return;
         //cambiar de turno cada vez que hace disparo 
         if (idLogged == id2) {
             socket.emit("cambiar_turno", {
@@ -252,14 +279,42 @@ export default function pagina() {
     function verCoordenadas() {
         console.log(coordenadasContrincante)
     }
-    function obtenerCasillaEnemy(e) {
+    /*function obtenerCasillaEnemy(e) {
+        if (partidaIniciada == false) {
+            alert("Espera a que el otro jugador coloque sus barcos")
+        }
         if (miTurno == idLogged) {
             const id = e.target.id;
-            setSelectedCasillaEnemy(id)
+            setSelectedCasillaEnemy(id);
+            socket.emit("enviar_disparo", {
+                room: idPartida,
+                emisor: idLogged,
+                receptor: esJugador1 ? id2 : id1,
+                casilla: id
+            })
             console.log(id, " enemigo"); // A1-enemy, B2-enemy, etc.
         }
 
         // hacer algo con el id
+    }*/
+    function obtenerCasillaEnemy(e) {
+        if (partidaIniciada === false) {
+            alert("Espera a que el otro jugador coloque sus barcos")
+            return; // ✅ Agregado
+        }
+        if (Number(miTurno) === Number(!idLogged)) {
+            alert("No es tu turno perrito paciencia")
+        }
+        const id = e.target.id;
+        setSelectedCasillaEnemy(id);
+        socket.emit("enviar_disparo", {
+            room: idPartida,
+            emisor: idLogged,
+            receptor: esJugador1 ? id2 : id1,
+            casilla: id
+        })
+        console.log(id, " enemigo");
+
     }
 
     function verSelectedBarco() {
