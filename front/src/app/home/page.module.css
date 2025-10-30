@@ -1,10 +1,35 @@
 .header {
-    font-size:0.7rem;
-    max-width: 100%;
-    padding: 1.5rem;
-    background-color: #2ba5a5;
-    color: rgba(246, 241, 241, 0.917)
+    font-size: 1.5rem;
+    margin-top: 3rem;
+    font-weight: bold;
+    text-align: center;
+    padding: 1rem 1rem;
+    background: url('/mnt/data/f0b264fa-4bfb-4b21-9f68-ec5f3fe440d7.png') no-repeat center center;
+    background-size: cover;
+    background-position: center; 
+    color: white;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.6);
+    position: relative;
+    z-index: 1;
+    
 }
+
+
+.header h1 {
+    font-size: 2.5rem; /* Título más grande y destacado */
+    letter-spacing: 1.5px; /* Un poco más de espacio entre letras */
+    color: #e6e6e6; /* Color amarillo brillante (como Bob Esponja) */
+    text-transform: uppercase;
+    padding: 1rem ;/* Un poco más de espacio alrededor */
+    background-color: rgba(0, 0, 0, 0.5); /* Fondo oscuro pero sutil para la legibilidad */
+    border-radius: 15px; /* Bordes más redondeados */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5); /* Sombra suave para darle profundidad */
+    display: inline-block;
+    margin-bottom: 0.5rem;
+}
+
+
+
 
 .boton{
     padding:1.5rem;
@@ -227,26 +252,11 @@
 
 /* Variantes de fondo (reemplazá por tus imágenes) */
 .cardCrear {
-  background-image: url("/imagenes/bg-crear.jpg");
+  background-image: url("/imagenes/crearPartida.jpg");
 }
 .cardScores {
-  background-image: url("/imagenes/bg-scores.jpg");
+  background-image: url("/imagenes/puntajes.jpg");
 }
 .cardReglas {
-  background-image: url("/imagenes/bg-reglas.jpg");
-}
-
-/* Responsive */
-@media (max-width: 1024px) {
-  .actionsGrid {
-    grid-template-columns: repeat(2, minmax(220px, 1fr));
-  }
-}
-@media (max-width: 640px) {
-  .actionsGrid {
-    grid-template-columns: 1fr;
-  }
-  .cardButton {
-    height: 180px;
-  }
+  background-image: url("/imagenes/reglas.jpg");
 }
