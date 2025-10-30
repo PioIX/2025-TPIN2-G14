@@ -43,8 +43,9 @@ a {
 html,
 body {
   height: 100%;
+  width: 100%;
   margin: 0;
   padding: 0;
   background-color: #0c7272;
-  background-image: url('/imagenes/fondo.jpg');
+  background-image: url('/imagenes/fondoLogin.jpg');
 }

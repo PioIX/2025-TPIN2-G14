@@ -1,7 +1,34 @@
 .msj {
-  height:4vh;
-  border-radius:1rem;
-  margin-top:1rem;
-  padding:0.5rem;
-  margin-right: 1rem;
+  width: 21rem;
+  height: 44px;            /* 4vh puede variar entre pantallas; fijo 44px */
+  padding: 0.65rem 0.85rem;
+  margin-top: 0.35rem;     /* más sutil */
+  margin-right: 0;         /* que ocupe todo el ancho */
+  border-radius: 12px;
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  outline: none;
+  transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+}
+
+.msj::placeholder {
+  color: rgba(255, 255, 255, 0.8);
+  opacity: 0.9;
+}
+
+.msj:focus {
+  border-color: #ffffff;
+  background: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.18);
+}
+
+.msj:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.msj.error {
+  border-color: #ffd1d1;
+  box-shadow: 0 0 0 3px rgba(255, 65, 65, 0.18);
 }
