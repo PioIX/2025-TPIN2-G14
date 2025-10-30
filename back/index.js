@@ -206,7 +206,7 @@ app.delete('/eliminarJugador', async function (req, res) {
   try {
     console.log(req.body)
     await realizarQuery(`DELETE FROM Jugadores WHERE id_jugador = ${req.body.id_jugador}`)
-    res.send({ res: true})
+    res.send({ res: true })
   } catch (error) {
     console.error("Error en /eliminarJugador:", error);
     res.send({ res: false, message: "Error eliminando el jugador." });
@@ -239,14 +239,20 @@ app.get('/traerBarcos', async function (req, res) {
   try {
     console.log(req.body)
     const consulta = await realizarQuery(`SELECT * FROM Barcos`);
-    res.send({ res: true, consulta});
+    res.send({ res: true, consulta });
   } catch (error) {
     console.error("Error en /traerBarcos:", error);
     res.send({ res: false, message: "Error para traer los barcos." });
   }
 });
 
-let jugadoresEnLinea = []
+let jugadoresEnLinea = [];
+
+const maxPlayers = 3;
+let players = 0;
+
+let jugadoresEnPartida = [];
+let disparo = false;
 
 // ============= SOCKET.IO =============
 io.on("connection", (socket) => {
@@ -289,7 +295,7 @@ io.on("connection", (socket) => {
     io.to(data.room).emit('jugadores_en_linea', { jugadores: jugadoresEnLinea })
 
     console.log("🚪 Entró a sala:", req.session.room);
-    
+
 
     io.to(data.room).emit('jugadores_en_linea', { jugadores: jugadoresEnLinea });
     console.log("🚪 Entró a sala:", req.session.room);
@@ -311,17 +317,26 @@ io.on("connection", (socket) => {
       imagen1: data.imagen1
     });
   });
-  socket.on("enviar_disparo", async data =>{
-    console.log("Enviando disparo: ", data.casilla, " a jugador: ", data.receptor)
+  socket.on("enviar_disparo", async data => {
+    console.log("Disparo recibido desde : ", data.emisor, " a jugador: ", data.receptor, " a la casilla: ", data.casilla)
+
+    jugadoresEnPartida.map((jugador)=>{
+      if(jugador.id == data.receptor){
+        if(jugador.casillas.includes(data.casilla)){
+          disparo = true
+        }
+      }
+    })
+
 
     io.to(data.room).emit("recibir_disparo", {
       receptor: data.receptor,
       casilla: data.casilla,
-      emisor: data.emisor
+      impactado: disparo
     }
     )
   })
-  socket.on("cambiar_turno", async data =>{
+  socket.on("cambiar_turno", async data => {
     console.log("Era turno de: ", data.emisor, " ahora es turno de: ", data.receptor)
 
     io.to(data.room).emit("aceptar_turno", {
@@ -330,13 +345,24 @@ io.on("connection", (socket) => {
     })
   })
   socket.on("enviar_barcos", async data => {
-    console.log("Enviando barcos: ", data.barcos, " a jugador: ", data.jugador2)
-    
-    io.to(data.room).emit('recibir_barcos', {
+    console.log("Recibiendo barcos de: ", data.jugador, " sus barcos son: ", data.barcos)
+
+    players++;
+
+    if (players < maxPlayers) {
+      jugadoresEnPartida.push({
+        id: data.jugador,
+        coordenadasUsadas: [data.casillas],
+        barcos: data.barcos
+      })
+    }
+
+
+    /*io.to(data.room).emit('recibir_barcos', {
       receptor: data.jugador2,
       barcos: data.barcos,
       emisor: data.jugador1
-    })
+    })*/
   })
   socket.on("enviar_partidaId", async data => {
     console.log("Enviando id: ", data.partidId, " a jugador: ", data.jugador2)
@@ -356,7 +382,7 @@ io.on("connection", (socket) => {
     });
   })
 
-  
+
   // Cuando se envía un mensaje
   socket.on('solicitar_imagenes', data => {
     console.log("Solicitando imágenes en room:", data.room);

@@ -58,7 +58,7 @@ export default function pagina() {
     const [selectedBarco, setSelectedBarco] = useState(null);
     const [selectedBarcoId, setSelectedBarcoId] = useState(null);
     const [barcosColocados, setBarcosColocados] = useState([]);
-    const [barcosContrincante, setBarcosContrincante] = useState(null);
+    const [barcosContrincante, setBarcosContrincante] = useState([]);
     const [coordenadasSeleccionadas, setCoordenadasSeleccionadas] = useState([]);
     const [primerCasilla, setPrimerCasilla] = useState(null);
     const [confirmado, setConfirmado] = useState(false);
@@ -66,13 +66,15 @@ export default function pagina() {
     const esJugador1 = Number(idLogged) === Number(id1);
     const [miTurno, setMiTurno] = useState(id1);
     const primerTurno = Number(idLogged) === Number(id1);
+    const [casillasUsadas, setCasillasUsadas] = useState([]);
 
     function obtenerCasilla(e) {
         const id = e.target.id;
         if (coordenadasSeleccionadas.length == 0) {
             setPrimerCasilla(id)
         }
-        setCoordenadasSeleccionadas(prev => [...prev, id]); // Agrega nuevas coordenadas al arreglo
+        setCoordenadasSeleccionadas(prev => [...prev, id]);
+        setCoordenadasUsadas(prev => [...prev, id]); // Agrega nuevas coordenadas al arreglo
         // hacer algo con el id
     }
 
@@ -113,14 +115,13 @@ export default function pagina() {
             room: idPartida,
             userId: Number(idLogged)
         });
-        socket.on("recibir_barcos", data => {
+        /*socket.on("recibir_barcos", data => {
             if (data.emisor != idLogged) {
                 console.log("Barcos recibidos de ", data.emisor, ": ", data.barcos);
                 setBarcosContrincante(data.barcos);
             }
-        });
+        });*/
         socket.on("aceptar_turno", data => {
-            console.log("ñañañañañañañañ")
             if (data.receptor == Number(idLogged)) {
                 setMiTurno(data.receptor)
                 console.log("Es mi turno")
@@ -323,9 +324,9 @@ export default function pagina() {
         console.log("enviando barcos al contrincante");
         socket.emit("enviar_barcos", {
             room: idPartida,
-            jugador2: esJugador1 ? Number(id2) : Number(id1),
-            barcos: barcosColocados,
-            jugador1: Number(idLogged)
+            jugador: idLogged,
+            casillas: casillasUsadas,
+            barcos: barcosColocados
         });
     }
 
