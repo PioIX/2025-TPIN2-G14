@@ -1,0 +1,158 @@
+.header {
+    font-size:0.7rem;
+    max-width: 100%;
+    padding: 1.5rem;
+    background-color: #2ba5a5;
+    color: rgba(246, 241, 241, 0.917)
+}
+
+.boton{
+    padding:1.5rem;
+    font-size:1.5rem;
+    background-color: #0c7272;
+    border: none;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+    border-radius: 1.5rem;
+}
+
+.contenedor{
+    padding-top:12rem;
+    display:flex;
+    flex-direction: row;
+    justify-content:space-around;
+}
+
+.selectJugador {
+    font-size: 1.2rem;
+    padding: 1rem;
+    margin-top: 1rem;
+    margin-bottom: 2rem;
+    border-radius: 1rem;
+    border: 2px solid #0c7272;
+    background-color: #f0f8f8; /* Color de fondo claro */
+    color: #0c7272; /* Color del texto */
+    cursor: pointer;
+    width: 100%;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.selectJugador:hover {
+    border-color: #0a5555;
+    background-color: #e0f0f0;
+}
+
+.selectJugador:focus {
+    border-color: #0c7272;
+    box-shadow: 0 0 0 3px rgba(12, 114, 114, 0.2);
+}
+
+.option {
+    font-size: 1.2rem;
+    padding: 0.5rem;
+    background-color: white;
+    color: #0c7272;
+}
+.text {
+    color: #0c7272;
+}
+
+.crearP {
+    text-align: right;
+    margin-bottom: 0.5rem;
+    margin-top: 0.5rem;
+    
+}
+
+.titulo{
+    font-size: 2rem;
+    font-weight: bold;
+    color:black;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: rgb(183, 183, 183) 0.1rem solid;
+}
+
+.personaje {
+    height: 4.5rem;
+    width: auto;
+    border-radius: 3rem;
+    border: black 0.1rem solid;
+    margin: 0.3rem;
+    display: block;
+}
+
+.personajes{
+    padding-top:1rem;
+    margin-bottom:0.5rem;
+}
+
+
+
+.botonFoto {
+    background: none;
+    border: 3px solid transparent;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 3rem;
+}
+
+.botonFoto:hover {
+    transform: scale(1.1);
+    border-color: #0c7272;
+}
+
+.botonFoto.selected {
+    border-color: #0c7272;
+    background-color: rgba(12, 114, 114, 0.3);
+    box-shadow: 0 0 15px rgba(12, 114, 114, 0.6);
+}
+
+.botonCrearPartida{
+    
+    padding:0.9rem;
+    font-size:1rem;
+    background-color: #0c7272;
+    border: none;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+    border-radius: 1.5rem;
+}
+.botonCrearPartida:hover{
+    background-color: rgba(12, 114, 114, 0.3);
+    box-shadow: 0 0 15px rgba(1, 29, 29, 0.6);
+    color:rgba(1, 29, 29, 0.6);
+}
+
+.botonAceptar{
+    
+    padding:1.5rem;
+    font-size:1.5rem;
+    background-color: #0c7272;
+    border: none;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+    border-radius: 1.5rem;
+    margin-top: 1rem;
+}
+
+.botonAceptar:hover{
+    background-color: rgba(12, 114, 114, 0.3);
+    box-shadow: 0 0 15px rgba(1, 29, 29, 0.6);
+    color:rgba(1, 29, 29, 0.6);
+}
+
+.crearPartidaPopup2{
+    margin-left: 5rem;
+}
