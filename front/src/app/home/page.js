@@ -8,6 +8,7 @@ import styles from "@/app/home/page.module.css";
 import { useSocket } from "../hooks/useSocket";
 import Image from "next/image";
 import PopUp from "@/components/PopUp";
+import { Poppins } from 'next/font/google'; // 👈 Agregá esto
 
 export default function Home() {
   const searchParams = useSearchParams();
@@ -28,6 +29,8 @@ export default function Home() {
   const [jugador1Id, setJugador1Id] = useState(null);
   const [jugador2Id, setJugador2Id] = useState(null);
   const [selectedImg2, setSelectedImg2] = useState(null);
+
+
 
   const selectedImgRef = useRef(selectedImg);
   useEffect(() => {

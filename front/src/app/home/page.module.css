@@ -1,3 +1,5 @@
+
+
 .header {
     font-size: 1.5rem;
     margin-top: 3rem;
@@ -21,6 +23,7 @@
     color: #e6e6e6; /* Color amarillo brillante (como Bob Esponja) */
     text-transform: uppercase;
     padding: 1rem ;/* Un poco más de espacio alrededor */
+    margin-top: 6rem;
     background-color: rgba(0, 0, 0, 0.5); /* Fondo oscuro pero sutil para la legibilidad */
     border-radius: 15px; /* Bordes más redondeados */
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5); /* Sombra suave para darle profundidad */
@@ -45,7 +48,7 @@
 }
 
 .contenedor{
-    padding-top:12rem;
+    padding-top:2rem;
     display:flex;
     flex-direction: row;
     justify-content:space-around;

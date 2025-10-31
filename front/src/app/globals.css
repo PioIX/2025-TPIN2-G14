@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap');
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -15,8 +17,10 @@ a {
 }
 
 html,
+
+
 body {
-  font-family: 'Slackey', sans-serif;
+  font-family: 'Poppins', sans-serif;
   height: 100%;
   width: 100%;
   margin: 0;
@@ -24,7 +28,6 @@ body {
   background-image: url('/imagenes/fondoLogin.jpg'); /* Ruta de la imagen */
   background-size: cover; /* Esto asegura que la imagen cubra toda la pantalla sin deformarse */
   background-position: center; /* Centra la imagen para que no se recorte en áreas no deseadas */
-  font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   max-width: 100vw;
