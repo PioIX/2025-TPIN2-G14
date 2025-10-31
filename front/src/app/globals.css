@@ -1,4 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Slackey&display=swap');
+
+* {
+  font-family: 'Slackey', sans-serif;
+  font-weight: 600;
+}
 
 :root {
   --background: #ffffff;
@@ -16,11 +21,7 @@ a {
   text-decoration: none;
 }
 
-html,
-
-
-body {
-  font-family: 'Poppins', sans-serif;
+html, body {
   height: 100%;
   width: 100%;
   margin: 0;
