@@ -127,13 +127,39 @@ export default function pagina() {
     useEffect(() => {
         if (!socket || !isConnected || !idLogged) return;
 
-        socket.on("recibir_disparo", data => {
+        const handleRecibirDisparo = (data) => {
+            console.log("📨 Disparo recibido:", data);
+
             if (data.receptor == Number(idLogged)) {
-                alert("OA PERRITO TE DISPARARON EN " + data.casilla)
-                console.log("Disparo recibido en ", data.casilla, " de ", data.emisor);
+                const mensaje = data.impactado
+                    ? `💥 ¡Te impactaron en ${data.casilla}!`
+                    : `💧 Fallaron en ${data.casilla} (agua)`;
+                alert(mensaje);
+
+                // Marcar visualmente la casilla en tu tablero
+                const btn = document.getElementById(data.casilla);
+                if (btn) {
+                    btn.style.backgroundColor = data.impactado ? 'red' : 'blue';
+                    btn.disabled = true;
+                }
             }
-        })
-    }, [socket, isConnected, idLogged])
+
+            // Si eres el emisor, marca en el tablero enemigo
+            if (data.emisor == Number(idLogged)) {
+                const btnEnemy = document.querySelectorAll(`#${data.casilla}`)[1]; // El segundo tablero
+                if (btnEnemy) {
+                    btnEnemy.style.backgroundColor = data.impactado ? 'red' : 'lightblue';
+                    btnEnemy.disabled = true;
+                }
+            }
+        };
+
+        socket.on("recibir_disparo", handleRecibirDisparo);
+
+        return () => {
+            socket.off("recibir_disparo", handleRecibirDisparo);
+        };
+    }, [socket, isConnected, idLogged]);
     useEffect(() => {
         if (!socket || !isConnected || !idLogged) return;
 
@@ -156,10 +182,10 @@ export default function pagina() {
         })
 
     }, [socket, isConnected, idLogged, idPartida])
-    useEffect(() => {
+    /*useEffect(() => {
         if (!socket || !isConnected || !idLogged || !selectedCasillaEnemy) return;
         //cambiar de turno cada vez que hace disparo 
-        if (idLogged == id2) {
+        /if (idLogged == id2) {
             socket.emit("cambiar_turno", {
                 receptor: id1,
                 emisor: idLogged,
@@ -177,7 +203,7 @@ export default function pagina() {
             setMiTurno(id2)
         }
 
-    }, [selectedCasillaEnemy])
+    }, [selectedCasillaEnemy])*/
     useEffect(() => {
         console.log(coordenadasSeleccionadas);
         console.log("primer casilla: ", primerCasilla);
@@ -302,8 +328,9 @@ export default function pagina() {
             alert("Espera a que el otro jugador coloque sus barcos")
             return; // ✅ Agregado
         }
-        if (Number(miTurno) === Number(!idLogged)) {
+        if (Number(miTurno) !== Number(idLogged)) {
             alert("No es tu turno perrito paciencia")
+            return;
         }
         const id = e.target.id;
         setSelectedCasillaEnemy(id);
@@ -314,6 +341,18 @@ export default function pagina() {
             casilla: id
         })
         console.log(id, " enemigo");
+        setTimeout(() => {
+            const nuevoTurno = esJugador1 ? id2 : id1;
+
+            socket.emit("cambiar_turno", {
+                receptor: nuevoTurno,
+                emisor: idLogged,
+                room: idPartida
+            });
+
+            setMiTurno(Number(nuevoTurno));
+            console.log("🔄 Turno cambiado a:", nuevoTurno);
+        }, 500); // Pequeño delay para que se procese el disparo primero
 
     }
 

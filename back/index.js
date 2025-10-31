@@ -319,23 +319,42 @@ io.on("connection", (socket) => {
   });
 
   socket.on("enviar_disparo", async data => {
-    console.log("Disparo recibido desde : ", data.emisor, " a jugador: ", data.receptor, " a la casilla: ", data.casilla)
+    console.log("🎯 Disparo recibido desde:", data.emisor, "a jugador:", data.receptor, "a la casilla:", data.casilla);
 
-    jugadoresEnPartida.map((jugador) => {
-      if (jugador.id == data.receptor) {
-        if (jugador.casillas.includes(data.casilla)) {
-          disparo = true
-        }
-      }
-    })
+    let disparo = false;
 
+    // Buscar al jugador receptor en la partida
+    const jugadorReceptor = jugadoresEnPartida.find(j =>
+      j.id == data.receptor && j.room == data.room
+    );
+
+    if (!jugadorReceptor) {
+      console.error("❌ No se encontró al jugador receptor:", data.receptor);
+      console.log("📋 Jugadores en partida:", jugadoresEnPartida);
+      return;
+    }
+
+    if (!jugadorReceptor.casillas) {
+      console.error("❌ El jugador no tiene casillas definidas");
+      return;
+    }
+
+    // Verificar si hay impacto
+    if (jugadorReceptor.casillas.includes(data.casilla)) {
+      disparo = true;
+      console.log("💥 ¡IMPACTO! en casilla:", data.casilla);
+    } else {
+      console.log("💧 Agua en casilla:", data.casilla);
+    }
+
+    // Emitir el resultado
     io.to(data.room).emit("recibir_disparo", {
       receptor: data.receptor,
+      emisor: data.emisor,
       casilla: data.casilla,
       impactado: disparo
-    }
-    )
-  })
+    });
+  });
   socket.on("cambiar_turno", async data => {
     console.log("Era turno de: ", data.emisor, " ahora es turno de: ", data.receptor)
 
@@ -348,17 +367,17 @@ io.on("connection", (socket) => {
     console.log("Recibiendo barcos de: ", data.jugador, " sus barcos son: ", data.barcos)
 
     players++;
-    let disparo = false;
+
 
     if (players < maxPlayers) {
       jugadoresEnPartida.push({
         id: data.jugador,
-        coordenadasUsadas: [data.casillas],
+        casillas: data.casillas,
         barcos: data.barcos
       })
     }
     if (jugadoresEnPartida.length == 2) {
-      socket.to(data.room).emit("partida_iniciada", {
+      io.to(data.room).emit("partida_iniciada", {
         partidaIniciada: true,
         idPartida: data.room
       })
