@@ -1,0 +1,73 @@
+.container {
+    position: relative;
+    min-height: 100vh;
+    background-image: url('/imagenes/fondoBienvenida.jpg');
+
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1;
+}
+
+.content {
+    position: relative;
+    text-align: center;
+    color: white;
+    z-index: 2;
+    padding: 20px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+}
+
+.title {
+    font-size: 3.5rem;
+    font-weight: bold;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
+    margin-bottom: 20px;
+}
+
+.subtitle {
+    font-size: 1.5rem;
+    margin-bottom: 30px;
+    font-style: italic;
+    color: #ffffff;
+}
+
+.buttonContainer {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.buttonStart {
+    padding: 15px 30px;
+    font-size: 1.2rem;
+    background-color: #0c7272;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s;
+    font-weight: bold;
+}
+
+.buttonStart:hover {
+    background-color: #0c7272;
+    transform: scale(1.1);
+}
+
+.buttonStart:active {
+    transform: scale(0.98);
+}
