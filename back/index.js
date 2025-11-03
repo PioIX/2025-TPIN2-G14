@@ -153,7 +153,7 @@ app.post('/agregarBarco', async (req, res) => {
     const id_partida = req.body.id_partida;
     const id_jugador = req.body.id_jugador;
     const barcos = req.body.barcos;
-
+    
     for (const barco of barcos) {
       const resultadoBarco = await realizarQuery(`
         INSERT INTO Barcos (longitud, impactos, id_partida, id_jugador)
@@ -163,11 +163,12 @@ app.post('/agregarBarco', async (req, res) => {
       const idBarco = resultadoBarco.insertId;
       console.log("idBarco creado:", idBarco);
 
-      for (const coord of barco.coordenadas) {
-        await realizarQuery(`
+      for (let coord of barco.coordenadas) {
+        let pedido = `
           INSERT INTO Coordenadas (id_partida, id_barco, coordenada_barco, impacto)
           VALUES ('${id_partida}', ${idBarco}, '${coord}', false)
-        `);
+        `
+        await realizarQuery(pedido);
       }
     }
 
@@ -179,17 +180,61 @@ app.post('/agregarBarco', async (req, res) => {
   }
 });
 
+//app.post('/disparo', async function (req, res) {
+/*try {
+  console.log(req.body);
+
+  const coordenada = await realizarQuery(`SELECT Coordenadas.id_barco, Barcos.id_jugador FROM Coordenadas INNER JOIN 
+    Barcos ON Coordenadas.id_barco = Barcos.id_barco WHERE Coordenadas.id_partida = ${req.body.id_partida} AND
+     Coordenadas.coordenada_barco = '${req.body.coordenada}' `);
+
+  if (coordenada.length == 0) {
+    return res.send({ res: true, impacto: false, message: "Agua" });
+  }
+
+  await realizarQuery(`UPDATE Coordenadas SET impacto = true WHERE id_barco = ${coordenada[0].id_barco} 
+    AND coordenada_barco = '${req.body.coordenada}'`);
+
+  await realizarQuery(`UPDATE Barcos SET impactos = impactos + 1 WHERE id_barco = ${coordenada[0].id_barco}`);
+
+  res.send({ res: true, impacto: true, message: "Impacto" });
+
+} catch (error) {
+  console.error("Error en /disparo:", error);
+  res.send({ res: false, message: "Error al procesar el disparo." });
+}*/
 app.post('/disparo', async function (req, res) {
   try {
     console.log(req.body);
 
-    const coordenada = await realizarQuery(`SELECT Coordenadas.id_barco, Barcos.id_jugador FROM Coordenadas INNER JOIN Barcos ON Coordenadas.id_barco = Barcos.id_barco WHERE Coordenadas.id_partida = ${req.body.id_partida} AND Coordenadas.coordenada_barco = '${req.body.coordenada}' `);
+    // Registrar el disparo en la base de datos
+    await realizarQuery(`INSERT INTO Disparos (id_partida, id_jugador, coordenada_disparo) 
+      VALUES (${req.body.id_partida}, ${req.body.id_jugador}, '${req.body.coordenada}')`);
+
+    // Obtener el id del jugador oponente
+    const oponente = await realizarQuery(`SELECT id_jugador FROM JugadoresPorPartida 
+      WHERE id_partida = ${req.body.id_partida} AND id_jugador != ${req.body.id_jugador}`);
+
+    if (oponente.length == 0) {
+      return res.send({ res: false, message: "No se encontró el oponente" });
+    }
+
+    const id_oponente = oponente[0].id_jugador;
+
+    // Buscar si el disparo impactó en un barco del oponente
+    const coordenada = await realizarQuery(`SELECT Coordenadas.id_barco, Barcos.id_jugador FROM Coordenadas 
+      INNER JOIN Barcos ON Coordenadas.id_barco = Barcos.id_barco 
+      WHERE Coordenadas.id_partida = ${req.body.id_partida} 
+      AND Coordenadas.coordenada_barco = '${req.body.coordenada}'
+      AND Barcos.id_jugador = ${id_oponente}`);
 
     if (coordenada.length == 0) {
       return res.send({ res: true, impacto: false, message: "Agua" });
     }
 
-    await realizarQuery(`UPDATE Coordenadas SET impacto = true WHERE id_barco = ${coordenada[0].id_barco} AND coordenada_barco = '${req.body.coordenada}'`);
+    // Registrar el impacto
+    await realizarQuery(`UPDATE Coordenadas SET impacto = true WHERE id_barco = ${coordenada[0].id_barco} 
+      AND coordenada_barco = '${req.body.coordenada}'`);
 
     await realizarQuery(`UPDATE Barcos SET impactos = impactos + 1 WHERE id_barco = ${coordenada[0].id_barco}`);
 
@@ -325,7 +370,7 @@ io.on("connection", (socket) => {
 
     // Buscar al jugador receptor en la partida
     const jugadorReceptor = jugadoresEnPartida.find(j =>
-      j.id == data.receptor && j.room == data.room
+      j.id == data.receptor
     );
 
     if (!jugadorReceptor) {
@@ -340,6 +385,7 @@ io.on("connection", (socket) => {
     }
 
     // Verificar si hay impacto
+    console.log(jugadorReceptor.casillas)
     if (jugadorReceptor.casillas.includes(data.casilla)) {
       disparo = true;
       console.log("💥 ¡IMPACTO! en casilla:", data.casilla);
