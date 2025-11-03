@@ -96,9 +96,7 @@ export default function pagina() {
         return null;
     }
 
-    useEffect(() => {
-        
-    })
+
     useEffect(() => {
         if (!socket || !isConnected || !idLogged) return;
 

@@ -1,12 +1,12 @@
 .body {
-    position: relative;
-    min-height: 100vh;
-    background-image: url('/imagenes/fondoLogin.jpg');
-    background-size: cover;
-    background-position: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  position: relative;
+  min-height: 100vh;
+  background-image: url('/imagenes/fondoLogin.jpg');
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .contenedor {
@@ -20,7 +20,6 @@
   backdrop-filter: blur(2px);
 }
 
-/* Tipografía */
 .title {
   margin: 0 0 0.5rem 0;
   font-size: 1.85rem;

@@ -360,7 +360,7 @@ export default function Home() {
                 </div>
                 <div className={styles.crearP}>
                   <button className={styles.botonCrearPartida} onClick={crearPartida}>
-                    crear partida
+                    Crear partida
                   </button>
                 </div>
               </div>
