@@ -265,7 +265,7 @@ export default function pagina() {
         }
     }, [coordenadasSeleccionadas, selectedBarco, primerCasilla]);
     useEffect(()=> {
-        socket.on()
+        socket.on();
     })
 
     useEffect(() => {
