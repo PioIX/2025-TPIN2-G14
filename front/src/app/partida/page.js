@@ -174,7 +174,7 @@ export default function pagina() {
         })
 
     }, [socket, isConnected, idLogged, idPartida])
-    
+
     useEffect(() => {
         console.log(coordenadasSeleccionadas);
         console.log("primer casilla: ", primerCasilla);
@@ -276,7 +276,7 @@ export default function pagina() {
     function verCoordenadas() {
         console.log(coordenadasContrincante)
     }
-    
+
     async function obtenerCasillaEnemy(e) {
         if (partidaIniciada === false) {
             alert("Espera a que el otro jugador coloque sus barcos")
@@ -306,7 +306,7 @@ export default function pagina() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data),
             });
-            if(response.res == true){
+            if (response.res == true) {
                 console.log("disparado")
             }
         } catch (error) {
@@ -406,10 +406,30 @@ export default function pagina() {
     }
     if (miTurno == idLogged) {
         mensajeAtaca = "¡Tu turno!"
-    }else{
+    } else {
         mensajeAtaca = "Turno Rival"
     }
 
+    async function probarImpactos() {
+        try {
+            const response = await fetch("http://localhost:4000/impactos", {
+                method: "GET",
+                headers: { "Content-Type": "application/json" }
+            });
+
+            const data = await response.json();
+            console.log("Respuesta de /impactos:", data);
+
+            if (data.res) {
+                alert(data.message);
+            } else {
+                alert("Error: " + data.message);
+            }
+        } catch (error) {
+            console.error("Error al llamar /impactos:", error);
+            //alert("Error al conectar con el servidor");
+        }
+    }
     return (
         <>
             <section className={styles.header}>
@@ -708,6 +728,7 @@ export default function pagina() {
                             <div className={styles.casillero}><button id="J10" onClick={obtenerCasillaEnemy}></button></div>
                         </div>
                     </div>
+                    <button onClick={probarImpactos}>Probar Impactos</button>
                 </div>
             </section>
         </>

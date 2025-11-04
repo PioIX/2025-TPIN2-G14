@@ -121,6 +121,7 @@ app.post('/crearPartida', async function (req, res) {
   try {
     console.log("Datos recibidos:", req.body);
 
+    // Insertar la partida y obtener el insertId directamente
     const resultado = await realizarQuery(`
       INSERT INTO Partidas (id_ganador, barcos_hundidos_j1, barcos_hundidos_j2)
       VALUES (NULL, 0, 0)
@@ -130,6 +131,7 @@ app.post('/crearPartida', async function (req, res) {
 
     console.log("ID partida creada:", idPartida);
 
+    // Insertar jugadores en la partida
     await realizarQuery(`
       INSERT INTO JugadoresPorPartida (id_partida, id_jugador)
       VALUES (${idPartida}, ${req.body.jugador1}), (${idPartida}, ${req.body.jugador2})
@@ -157,15 +159,15 @@ app.get('/impactos', async (req, res) => {
       return res.send({ res: true, message: "No hay impactos para actualizar" });
     }
 
-    for (let i = 0; i <= 5; i++) {
+    for (let i = 0; i < impactos.length; i++) {
       await realizarQuery(`UPDATE Barcos SET impactos = impactos + 1 
-        WHERE id_barco = ${impactos[i].id_barco}`);
+    WHERE id_barco = ${impactos[i].id_barco}`);
     }
 
     res.send({ res: true, message: `Se actualizaron ${impactos.length} impactos` });
     console.log({ res: true, message: `Se actualizaron ${impactos.length} impactos` });
   } catch (error) {
-    console.error("Error en /impactos:", error);
+    console.log("Error en /impactos:", error);
     res.send({ res: false, message: "Error en impactos" });
   }
 });
@@ -177,7 +179,7 @@ app.post('/agregarBarco', async (req, res) => {
     const id_partida = req.body.id_partida;
     const id_jugador = req.body.id_jugador;
     const barcos = req.body.barcos;
-    
+
     for (const barco of barcos) {
       const resultadoBarco = await realizarQuery(`
         INSERT INTO Barcos (longitud, impactos, id_partida, id_jugador)
