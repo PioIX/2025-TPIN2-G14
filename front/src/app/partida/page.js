@@ -1,4 +1,4 @@
-'use client' 
+'use client'
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSocket } from "../hooks/useSocket";
@@ -29,19 +29,6 @@ const barcosInfo = [
     { nombre: 'portaAviones', largo: 5, img: '/imagenes/portaAvionesV.png', imgH: '/imagenes/portaAvionesH.png', id: 4 }
 ];
 
-const matriz = [
-    ["A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10"],
-    ["B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10"],
-    ["C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10"],
-    ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8", "D9", "D10"],
-    ["E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8", "E9", "E10"],
-    ["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10"],
-    ["G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G10"],
-    ["H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9", "H10"],
-    ["I1", "I2", "I3", "I4", "I5", "I6", "I7", "I8", "I9", "I10"],
-    ["J1", "J2", "J3", "J4", "J5", "J6", "J7", "J8", "J9", "J10"]
-];
-
 export default function pagina() {
     const { socket, isConnected } = useSocket();
     const searchParams = useSearchParams();
@@ -58,20 +45,24 @@ export default function pagina() {
     const [selectedBarco, setSelectedBarco] = useState(null);
     const [selectedBarcoId, setSelectedBarcoId] = useState(null);
     const [barcosColocados, setBarcosColocados] = useState([]);
-    const [barcosContrincante, setBarcosContrincante] = useState(null);
+    const [barcosContrincante, setBarcosContrincante] = useState([]);
     const [coordenadasSeleccionadas, setCoordenadasSeleccionadas] = useState([]);
     const [primerCasilla, setPrimerCasilla] = useState(null);
-    const [confirmado, setConfirmado] = useState(false); 
+    const [confirmado, setConfirmado] = useState(false);
+    const [coordenadasContrincante, setCoordenadasContrincante] = useState([]);
     const esJugador1 = Number(idLogged) === Number(id1);
-    const [miTurno, setMiTurno] = useState(id1);
+    const [miTurno, setMiTurno] = useState(Number(id1)); // ✅ Convertir a número desde el inicio
     const primerTurno = Number(idLogged) === Number(id1);
+    const [casillasUsadas, setCasillasUsadas] = useState([]);
+    const [partidaIniciada, setPartidaIniciada] = useState(false);
 
     function obtenerCasilla(e) {
         const id = e.target.id;
         if (coordenadasSeleccionadas.length == 0) {
             setPrimerCasilla(id)
         }
-        setCoordenadasSeleccionadas(prev => [...prev, id]); // Agrega nuevas coordenadas al arreglo
+        setCoordenadasSeleccionadas(prev => [...prev, id]);
+        setCasillasUsadas(prev => [...prev, id]); // Agrega nuevas coordenadas al arreglo
         // hacer algo con el id
     }
 
@@ -95,9 +86,67 @@ export default function pagina() {
         return null;
     }
 
+    /*useEffect(() => {
+        if (barcosContrincante.length > 0) {
+            for (let i = 0; i < barcosContrincante.length; i++) {
+                for (let j = 0; j < barcosContrincante[i].coordenadas.length; j++) {
+                    setCoordenadasContrincante(prev => [...prev, barcosContrincante[i].coordenadas[j]])
+                }
+            }
+        }
+    }, [barcosContrincante])*/
     useEffect(() => {
-        
-    })
+        if (!socket || !isConnected || !idLogged) return;
+
+        const handlePartidaIniciada = (data) => {
+            if (data.idPartida == idPartida) {
+                setPartidaIniciada(true)
+            }
+        };
+
+        socket.on("partida_iniciada", handlePartidaIniciada);
+
+        // ✅ AGREGAR CLEANUP
+        return () => {
+            socket.off("partida_iniciada", handlePartidaIniciada);
+        };
+    }, [socket, isConnected, idLogged, idPartida])
+    useEffect(() => {
+        if (!socket || !isConnected || !idLogged) return;
+
+        const handleRecibirDisparo = (data) => {
+            console.log("📨 Disparo recibido:", data);
+
+            if (data.receptor == Number(idLogged)) {
+                const mensaje = data.impactado
+                    ? `💥 ¡Te impactaron en ${data.casilla}!`
+                    : `💧 Fallaron en ${data.casilla} (agua)`;
+                alert(mensaje);
+
+                // Marcar visualmente la casilla en tu tablero
+                const btn = document.getElementById(data.casilla);
+                if (btn) {
+                    btn.style.backgroundColor = data.impactado ? 'red' : 'lightblue';
+                    btn.disabled = true;
+                }
+            }
+
+            // Si eres el emisor, marca en el tablero enemigo
+            if (data.emisor == Number(idLogged)) {
+                const btnEnemy = document.querySelectorAll(`#${data.casilla}`)[1]; // El segundo tablero
+                if (btnEnemy) {
+                    btnEnemy.style.backgroundColor = data.impactado ? 'red' : 'lightblue';
+                    btnEnemy.disabled = true;
+                }
+            }
+        };
+
+        socket.on("recibir_disparo", handleRecibirDisparo);
+
+        return () => {
+            socket.off("recibir_disparo", handleRecibirDisparo);
+        };
+    }, [socket, isConnected, idLogged]);
     useEffect(() => {
         if (!socket || !isConnected || !idLogged) return;
 
@@ -106,43 +155,21 @@ export default function pagina() {
             room: idPartida,
             userId: Number(idLogged)
         });
-        socket.on("recibir_barcos", data => {
+        /*socket.on("recibir_barcos", data => {
             if (data.emisor != idLogged) {
                 console.log("Barcos recibidos de ", data.emisor, ": ", data.barcos);
                 setBarcosContrincante(data.barcos);
             }
-        });
+        });*/
         socket.on("aceptar_turno", data => {
-            console.log("ñañañañañañañañ")
             if (data.receptor == Number(idLogged)) {
                 setMiTurno(data.receptor)
                 console.log("Es mi turno")
             }
         })
 
-    })
-    useEffect(() => {
-        if (!socket || !isConnected || !idLogged) return;
-        //cambiar de turno cada vez que hace disparo 
-        if (idLogged == id2) {
-            socket.emit("cambiar_turno", {
-                receptor: id1,
-                emisor: idLogged,
-                room: idPartida
-            })
-            console.log("Ya no es mi turno, es de: ", id1)
-            setMiTurno(id1)
-        } else if (idLogged == id1) {
-            socket.emit("cambiar_turno", {
-                receptor: id2,
-                emisor: idLogged,
-                room: idPartida
-            })
-            console.log("Ya no es mi turno, es de: ", id2)
-            setMiTurno(id2)
-        }
-
-    }, [selectedCasillaEnemy])
+    }, [socket, isConnected, idLogged, idPartida])
+    
     useEffect(() => {
         console.log(coordenadasSeleccionadas);
         console.log("primer casilla: ", primerCasilla);
@@ -241,15 +268,60 @@ export default function pagina() {
         }
 
     }, [selectedBarcoId])
-
-    function obtenerCasillaEnemy(e) {
-        if (miTurno == idLogged) {
-            const id = e.target.id;
-            setSelectedCasillaEnemy(id)
-            console.log(id, " enemigo"); // A1-enemy, B2-enemy, etc.
+    function verCoordenadas() {
+        console.log(coordenadasContrincante)
+    }
+    
+    async function obtenerCasillaEnemy(e) {
+        if (partidaIniciada === false) {
+            alert("Espera a que el otro jugador coloque sus barcos")
+            return; // ✅ Agregado
         }
+        if (Number(miTurno) !== Number(idLogged)) {
+            alert("No es tu turno perrito paciencia")
+            return;
+        }
+        const id = e.target.id;
+        setSelectedCasillaEnemy(id);
+        socket.emit("enviar_disparo", {
+            room: idPartida,
+            emisor: idLogged,
+            receptor: esJugador1 ? id2 : id1,
+            casilla: id
+        })
+        console.log(id, " enemigo");
+        const data = {
+            id_partida: idPartida,
+            coordenada: id,
+            id_jugador: idLogged,
+        }
+        try {
+            const response = await fetch("http://localhost:4000/disparo", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data),
+            });
+            if(response.res == true){
+                console.log("disparado")
+            }
+        } catch (error) {
+            console.error("Error en /agregarBarco:", error);
+            alert("Error al conectar con el servidor");
+        }
+        console.log("enviando barcos al contrincante");
+        setTimeout(() => {
+            const nuevoTurno = esJugador1 ? id2 : id1;
 
-        // hacer algo con el id
+            socket.emit("cambiar_turno", {
+                receptor: nuevoTurno,
+                emisor: idLogged,
+                room: idPartida
+            });
+
+            setMiTurno(Number(nuevoTurno));
+            console.log("🔄 Turno cambiado a:", nuevoTurno);
+        }, 500); // Pequeño delay para que se procese el disparo primero
+
     }
 
     function verSelectedBarco() {
@@ -314,13 +386,13 @@ export default function pagina() {
         console.log("enviando barcos al contrincante");
         socket.emit("enviar_barcos", {
             room: idPartida,
-            jugador2: esJugador1 ? Number(id2) : Number(id1),
-            barcos: barcosColocados,
-            jugador1: Number(idLogged)
+            jugador: idLogged,
+            casillas: casillasUsadas,
+            barcos: barcosColocados
         });
     }
 
-    let mensajeHeader = "Ubicá tus barcos, seleccionando un barco y luego las casillas"; 
+    let mensajeHeader = "Ubicá tus barcos, seleccionando un barco y luego las casillas";
     if (barcosColocados.length == 5 && !confirmado) {
         mensajeHeader = "No te olvides de apretar Confirmar";
     }
@@ -628,6 +700,7 @@ export default function pagina() {
                     </div>
                 </div>
             </section>
+
 
         </>
     )
