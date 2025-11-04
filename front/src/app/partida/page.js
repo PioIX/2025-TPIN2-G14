@@ -53,8 +53,11 @@ export default function pagina() {
     const esJugador1 = Number(idLogged) === Number(id1);
     const [miTurno, setMiTurno] = useState(Number(id1)); // ✅ Convertir a número desde el inicio
     const primerTurno = Number(idLogged) === Number(id1);
+    let mensajeAtaca = ""
     const [casillasUsadas, setCasillasUsadas] = useState([]);
     const [partidaIniciada, setPartidaIniciada] = useState(false);
+
+
 
     function obtenerCasilla(e) {
         const id = e.target.id;
@@ -85,6 +88,7 @@ export default function pagina() {
         // Si no son ni horizontal ni vertical, retornar null (inválido)
         return null;
     }
+
 
     /*useEffect(() => {
         if (barcosContrincante.length > 0) {
@@ -147,6 +151,7 @@ export default function pagina() {
             socket.off("recibir_disparo", handleRecibirDisparo);
         };
     }, [socket, isConnected, idLogged]);
+
     useEffect(() => {
         if (!socket || !isConnected || !idLogged) return;
 
@@ -399,12 +404,17 @@ export default function pagina() {
     if (confirmado) {
         mensajeHeader = "¡A jugar!";
     }
+    if (miTurno == idLogged) {
+        mensajeAtaca = "¡Tu turno!"
+    }else{
+        mensajeAtaca = "Turno Rival"
+    }
 
     return (
         <>
             <section className={styles.header}>
                 <h1>
-                    Numero de partida:  {idPartida} - {mensajeHeader}
+                    {mensajeHeader} - {mensajeAtaca}
                 </h1>
                 <br></br>
             </section>
@@ -700,8 +710,6 @@ export default function pagina() {
                     </div>
                 </div>
             </section>
-
-
         </>
     )
 }
