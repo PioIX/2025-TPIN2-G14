@@ -58,6 +58,7 @@ export default function pagina() {
     const [partidaIniciada, setPartidaIniciada] = useState(false);
 
 
+
     function obtenerCasilla(e) {
         const id = e.target.id;
         if (coordenadasSeleccionadas.length == 0) {
@@ -87,6 +88,7 @@ export default function pagina() {
         // Si no son ni horizontal ni vertical, retornar null (inválido)
         return null;
     }
+
 
     /*useEffect(() => {
         if (barcosContrincante.length > 0) {
@@ -149,6 +151,7 @@ export default function pagina() {
             socket.off("recibir_disparo", handleRecibirDisparo);
         };
     }, [socket, isConnected, idLogged]);
+
     useEffect(() => {
         if (!socket || !isConnected || !idLogged) return;
 
@@ -707,8 +710,6 @@ export default function pagina() {
                     </div>
                 </div>
             </section>
-
-
         </>
     )
 }
