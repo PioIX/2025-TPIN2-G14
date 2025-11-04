@@ -360,7 +360,12 @@ io.on("connection", (socket) => {
       imagen1: data.imagen1
     });
   });
-
+  socket.on("barcos_listos", async data => {
+    io.to(data.room).emit("recibir_listo",{
+      listo: data.esListo,
+      idJugador: data.jugadorId
+    })
+  })
   socket.on("enviar_disparo", async data => {
     console.log("🎯 Disparo recibido desde:", data.emisor, "a jugador:", data.receptor, "a la casilla:", data.casilla);
 

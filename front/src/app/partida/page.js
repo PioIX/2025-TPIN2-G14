@@ -53,9 +53,10 @@ export default function pagina() {
     const esJugador1 = Number(idLogged) === Number(id1);
     const [miTurno, setMiTurno] = useState(Number(id1)); // ✅ Convertir a número desde el inicio
     const primerTurno = Number(idLogged) === Number(id1);
-    let mensajeAtaca = ""
     const [casillasUsadas, setCasillasUsadas] = useState([]);
     const [partidaIniciada, setPartidaIniciada] = useState(false);
+    const [barcosListos, setBarcosListos] = useState(1);
+    let mensajeAtaca = "";
 
 
 
@@ -263,7 +264,9 @@ export default function pagina() {
             console.log("Barco colocado en orientación:", orientacionDetectada);
         }
     }, [coordenadasSeleccionadas, selectedBarco, primerCasilla]);
-
+    useEffect(()=> {
+        socket.on()
+    })
 
     useEffect(() => {
         for (let i = 0; i < barcosInfo.length; i++) {
@@ -365,7 +368,7 @@ export default function pagina() {
             alert("Poné los 5 barcos primero");
             return;
         }
-
+        setBarcosListos(2);
         const body = {
             id_partida: idPartida,
             id_jugador: idLogged,
@@ -395,6 +398,11 @@ export default function pagina() {
             casillas: casillasUsadas,
             barcos: barcosColocados
         });
+        socket.emit("barcos_listos", {
+            room: idPartida,
+            jugadorId : idLogged,
+            esListo : 3,
+        })
     }
 
     let mensajeHeader = "Ubicá tus barcos, seleccionando un barco y luego las casillas";
@@ -428,6 +436,9 @@ export default function pagina() {
                             <h2>{esJugador1 ? nombre1 : nombre2}</h2>
                             <p>Mi tablero</p>
                         </div>
+                        {barcosListos === 2 ?(<div className={styles.checkmark}>✓</div>):(<div></div>)
+                            
+                        }
                     </div>
 
                     <div className={styles.tablero}>
@@ -584,6 +595,9 @@ export default function pagina() {
                             <h2>{esJugador1 ? nombre2 : nombre1}</h2>
                             <p>Tablero enemigo</p>
                         </div>
+                        {barcosListos === 3 ?(<div className={styles.checkmark}>✓</div>):(<div></div>)
+                            
+                        }
 
                     </div>
                     <div className={styles.tablero}>
