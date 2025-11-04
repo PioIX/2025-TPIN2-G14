@@ -146,6 +146,32 @@ app.post('/crearPartida', async function (req, res) {
   }
 });
 
+app.get('/impactos', async (req, res) => {
+  try {
+    const impactos = await realizarQuery(`SELECT Disparos.id_disparo, Coordenadas.id_barco, 
+      Coordenadas.coordenada_barco, Disparos.coordenada_disparo
+      FROM Disparos
+      INNER JOIN Coordenadas ON Disparos.coordenada_disparo = Coordenadas.coordenada_barco
+      AND Disparos.id_partida = Coordenadas.id_partida
+      WHERE Disparos.id_jugador != Coordenadas.id_jugador`);
+
+    if (impactos.length == 0) {
+      return res.send({ res: true, message: "No hay impactos para actualizar" });
+    }
+
+    for (let i = 0; i <= 5; i++) {
+      await realizarQuery(`UPDATE Barcos SET impactos = impactos + 1 
+        WHERE id_barco = ${impactos[i].id_barco}`);
+    }
+
+    res.send({ res: true, message: `Se actualizaron ${impactos.length} impactos` });
+    console.log({ res: true, message: `Se actualizaron ${impactos.length} impactos` });
+  } catch (error) {
+    console.error("Error en /impactos:", error);
+    res.send({ res: false, message: "Error en impactos" });
+  }
+});
+
 app.post('/agregarBarco', async (req, res) => {
   try {
     console.log("Datos recibidos:", req.body);
@@ -180,38 +206,13 @@ app.post('/agregarBarco', async (req, res) => {
   }
 });
 
-//app.post('/disparo', async function (req, res) {
-/*try {
-  console.log(req.body);
-
-  const coordenada = await realizarQuery(`SELECT Coordenadas.id_barco, Barcos.id_jugador FROM Coordenadas INNER JOIN 
-    Barcos ON Coordenadas.id_barco = Barcos.id_barco WHERE Coordenadas.id_partida = ${req.body.id_partida} AND
-     Coordenadas.coordenada_barco = '${req.body.coordenada}' `);
-
-  if (coordenada.length == 0) {
-    return res.send({ res: true, impacto: false, message: "Agua" });
-  }
-
-  await realizarQuery(`UPDATE Coordenadas SET impacto = true WHERE id_barco = ${coordenada[0].id_barco} 
-    AND coordenada_barco = '${req.body.coordenada}'`);
-
-  await realizarQuery(`UPDATE Barcos SET impactos = impactos + 1 WHERE id_barco = ${coordenada[0].id_barco}`);
-
-  res.send({ res: true, impacto: true, message: "Impacto" });
-
-} catch (error) {
-  console.error("Error en /disparo:", error);
-  res.send({ res: false, message: "Error al procesar el disparo." });
-}*/
 app.post('/disparo', async function (req, res) {
   try {
     console.log(req.body);
 
-    // Registrar el disparo en la base de datos
     await realizarQuery(`INSERT INTO Disparos (id_partida, id_jugador, coordenada_disparo) 
       VALUES (${req.body.id_partida}, ${req.body.id_jugador}, '${req.body.coordenada}')`);
 
-    // Obtener el id del jugador oponente
     const oponente = await realizarQuery(`SELECT id_jugador FROM JugadoresPorPartida 
       WHERE id_partida = ${req.body.id_partida} AND id_jugador != ${req.body.id_jugador}`);
 
@@ -221,7 +222,6 @@ app.post('/disparo', async function (req, res) {
 
     const id_oponente = oponente[0].id_jugador;
 
-    // Buscar si el disparo impactó en un barco del oponente
     const coordenada = await realizarQuery(`SELECT Coordenadas.id_barco, Barcos.id_jugador FROM Coordenadas 
       INNER JOIN Barcos ON Coordenadas.id_barco = Barcos.id_barco 
       WHERE Coordenadas.id_partida = ${req.body.id_partida} 
