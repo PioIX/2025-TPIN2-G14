@@ -152,15 +152,17 @@ app.post('/impactosJ1', async (req, res) => {
        WHERE id_partida = ${req.body.id_partida} AND id_jugador = ${req.body.id_jugador}`);
     for(let barco of impactos){
       if (barco.impactos != barco.longuitud) {
+        console.log(barco.longitud, barco.impactos)
+        console.log("No hay hundidos J1")
         return res.send({res: false, message: "Todavia no hundio ningun barco"})
       }
-      const hundir = await realizarQuery(`UPDATE Partidas SET barcos_undidos_j1 = barcos_hundidos_j1 + 1
+      const hundir = await realizarQuery(`UPDATE Partidas SET barcos_hundidos_j1 = barcos_hundidos_j1 + 1
         WHERE id_partida = ${req.body.id_partida}`);
     }
   
     return res.send({res: true, message: "Barcos hundidos actualizados"});
   } catch (error) {
-
+    console.log("Error http")
     return res.send({res: false, message: "Error al actualizar barcos hundidos"});
   }
  
@@ -170,17 +172,24 @@ app.post('/impactosJ2', async (req, res) => {
   try {
     const impactos = await realizarQuery(`SELECT longitud, impactos, id_barco FROM Barcos
        WHERE id_partida = ${req.body.id_partida} AND id_jugador = ${req.body.id_jugador}`);
+    console.log("estos son los impactos: " + impactos)
     for(let barco of impactos){
+      console.log(barco)
       if (barco.impactos != barco.longitud) {
+        console.log(barco.longitud, barco.impactos)
+        console.log("No hay hundidos j2")
         return res.send({res: false, message: "Todavia no hundio ningun barco"})
       }
-      const hundir = await realizarQuery(`UPDATE Partidas SET barcos_undidos_j2 = barcos_hundidos_j2 + 1
-        WHERE id_partida = ${req.body.id_partida}`);
+      else{
+        const hundir = await realizarQuery(`UPDATE Partidas SET barcos_hundidos_j2 = barcos_hundidos_j2 + 1
+          WHERE id_partida = ${req.body.id_partida}`);
+
+      }
     }
   
     return res.send({res: true, message: "Barcos hundidos actualizados"});
   } catch (error) {
-    
+    console.log("Error http")
     return res.send({res: false, message: "Error al actualizar barcos hundidos"});
   }
  

@@ -91,15 +91,6 @@ export default function pagina() {
     }
 
 
-    /*useEffect(() => {
-        if (barcosContrincante.length > 0) {
-            for (let i = 0; i < barcosContrincante.length; i++) {
-                for (let j = 0; j < barcosContrincante[i].coordenadas.length; j++) {
-                    setCoordenadasContrincante(prev => [...prev, barcosContrincante[i].coordenadas[j]])
-                }
-            }
-        }
-    }, [barcosContrincante])*/
     useEffect(() => {
         if (!socket || !isConnected || !idLogged) return;
 
@@ -144,6 +135,8 @@ export default function pagina() {
                     btnEnemy.disabled = true;
                 }
             }
+
+            chequearDisparos()
         };
 
         socket.on("recibir_disparo", handleRecibirDisparo);
@@ -169,6 +162,7 @@ export default function pagina() {
         });*/
         socket.on("aceptar_turno", data => {
             if (data.receptor == Number(idLogged)) {
+                
                 setMiTurno(data.receptor)
                 console.log("Es mi turno")
             }
@@ -410,9 +404,10 @@ export default function pagina() {
     } else {
         mensajeAtaca = "Turno Rival"
     }
-    useEffect(() => {
-        if (esJugador1) {
-            async function probarImpactos() {
+    function chequearDisparos() {
+        if (esJugador1 == idLogged) {
+            console.log("entre al cosoñañañña")
+            async function probarImpactos1() {
                 try {
                     let info = {
                         id_jugador: idLogged,
@@ -430,16 +425,18 @@ export default function pagina() {
                     if (data.res) {
                         console.log("Impactos obtenidos:", data.impactos);
                     } else {
-                        alert("Error");
+                        console.log("Error al llamar /impactos:");
+                        //alert("Error");
                     }
                 } catch (error) {
-                    console.error("Error al llamar /impactos:", error);
+                    console.log("Error al llamar /impactos:", error);
                     //alert("Error al conectar con el servidor");
                 }
             }
-            probarImpactos();
+            probarImpactos1();
         } else {
-            async function probarImpactos() {
+            console.log("entre al cosoñañañña 2")
+            async function probarImpactos2() {
                 try {
                     let info = {
                         id_jugador: idLogged,
@@ -457,17 +454,18 @@ export default function pagina() {
                     if (data.res) {
                         console.log("Impactos obtenidos:", data.impactos);
                     } else {
-                        alert("Error");
+                        //alert("Error");
+                        console.log("Error al llamar /impactos:");
                     }
                 } catch (error) {
-                    console.error("Error al llamar /impactos:", error);
+                    console.log("Error al llamar /impactos:", error);
                     //alert("Error al conectar con el servidor");
                 }
             }
-            probarImpactos();
+            probarImpactos2();
         }
         
-    },[disparosRecibidos])
+    }
 
     return (
         <>
