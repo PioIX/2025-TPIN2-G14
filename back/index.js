@@ -146,30 +146,44 @@ app.post('/crearPartida', async function (req, res) {
   }
 });
 
-app.get('/impactos', async (req, res) => {
+app.post('/impactosJ1', async (req, res) => {
   try {
-    const impactos = await realizarQuery(`SELECT Disparos.id_disparo, Coordenadas.id_barco, 
-      Coordenadas.coordenada_barco, Disparos.coordenada_disparo
-      FROM Disparos
-      INNER JOIN Coordenadas ON Disparos.coordenada_disparo = Coordenadas.coordenada_barco
-      AND Disparos.id_partida = Coordenadas.id_partida
-      WHERE Disparos.id_jugador != Coordenadas.id_jugador`);
-
-    if (impactos.length == 0) {
-      return res.send({ res: true, message: "No hay impactos para actualizar" });
+    const impactos = await realizarQuery(`SELECT longitud, impactos, id_barco FROM Barcos
+       WHERE id_partida = ${req.body.id_partida} AND id_jugador = ${req.body.id_jugador}`);
+    for(let barco of impactos){
+      if (barco.impactos != barco.longuitud) {
+        return res.send({res: false, message: "Todavia no hundio ningun barco"})
+      }
+      const hundir = await realizarQuery(`UPDATE Partidas SET barcos_undidos_j1 = barcos_hundidos_j1 + 1
+        WHERE id_partida = ${req.body.id_partida}`);
     }
-
-    for (let i = 0; i < impactos.length; i++) {
-      await realizarQuery(`UPDATE Barcos SET impactos = impactos + 1 
-    WHERE id_barco = ${impactos[i].id_barco}`);
-    }
-
-    res.send({ res: true, message: `Se actualizaron ${impactos.length} impactos` });
-    console.log({ res: true, message: `Se actualizaron ${impactos.length} impactos` });
+  
+    return res.send({res: true, message: "Barcos hundidos actualizados"});
   } catch (error) {
-    console.log("Error en /impactos:", error);
-    res.send({ res: false, message: "Error en impactos" });
+
+    return res.send({res: false, message: "Error al actualizar barcos hundidos"});
   }
+ 
+});
+
+app.post('/impactosJ2', async (req, res) => {
+  try {
+    const impactos = await realizarQuery(`SELECT longitud, impactos, id_barco FROM Barcos
+       WHERE id_partida = ${req.body.id_partida} AND id_jugador = ${req.body.id_jugador}`);
+    for(let barco of impactos){
+      if (barco.impactos != barco.longitud) {
+        return res.send({res: false, message: "Todavia no hundio ningun barco"})
+      }
+      const hundir = await realizarQuery(`UPDATE Partidas SET barcos_undidos_j2 = barcos_hundidos_j2 + 1
+        WHERE id_partida = ${req.body.id_partida}`);
+    }
+  
+    return res.send({res: true, message: "Barcos hundidos actualizados"});
+  } catch (error) {
+    
+    return res.send({res: false, message: "Error al actualizar barcos hundidos"});
+  }
+ 
 });
 
 app.post('/agregarBarco', async (req, res) => {

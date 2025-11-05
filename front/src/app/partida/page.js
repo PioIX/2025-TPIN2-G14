@@ -56,6 +56,7 @@ export default function pagina() {
     let mensajeAtaca = ""
     const [casillasUsadas, setCasillasUsadas] = useState([]);
     const [partidaIniciada, setPartidaIniciada] = useState(false);
+    const [disparosRecibidos, setDisparosRecibidos] = useState(0);
 
 
 
@@ -146,7 +147,7 @@ export default function pagina() {
         };
 
         socket.on("recibir_disparo", handleRecibirDisparo);
-
+        setDisparosRecibidos(prev=> prev+1)
         return () => {
             socket.off("recibir_disparo", handleRecibirDisparo);
         };
@@ -409,27 +410,65 @@ export default function pagina() {
     } else {
         mensajeAtaca = "Turno Rival"
     }
+    useEffect(() => {
+        if (esJugador1) {
+            async function probarImpactos() {
+                try {
+                    let info = {
+                        id_jugador: idLogged,
+                        id_partida: idPartida
+                    }
+                    const response = await fetch("http://localhost:4000/impactosJ1", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(info)
+                    });
 
-    async function probarImpactos() {
-        try {
-            const response = await fetch("http://localhost:4000/impactos", {
-                method: "GET",
-                headers: { "Content-Type": "application/json" }
-            });
+                    const data = await response.json();
+                    console.log("Respuesta de /impactos:", data);
 
-            const data = await response.json();
-            console.log("Respuesta de /impactos:", data);
-
-            if (data.res) {
-                alert(data.message);
-            } else {
-                alert("Error: " + data.message);
+                    if (data.res) {
+                        console.log("Impactos obtenidos:", data.impactos);
+                    } else {
+                        alert("Error");
+                    }
+                } catch (error) {
+                    console.error("Error al llamar /impactos:", error);
+                    //alert("Error al conectar con el servidor");
+                }
             }
-        } catch (error) {
-            console.error("Error al llamar /impactos:", error);
-            //alert("Error al conectar con el servidor");
+            probarImpactos();
+        } else {
+            async function probarImpactos() {
+                try {
+                    let info = {
+                        id_jugador: idLogged,
+                        id_partida: idPartida
+                    }
+                    const response = await fetch("http://localhost:4000/impactosJ2", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(info)
+                    });
+
+                    const data = await response.json();
+                    console.log("Respuesta de /impactos:", data);
+
+                    if (data.res) {
+                        console.log("Impactos obtenidos:", data.impactos);
+                    } else {
+                        alert("Error");
+                    }
+                } catch (error) {
+                    console.error("Error al llamar /impactos:", error);
+                    //alert("Error al conectar con el servidor");
+                }
+            }
+            probarImpactos();
         }
-    }
+        
+    },[disparosRecibidos])
+
     return (
         <>
             <section className={styles.header}>
@@ -728,7 +767,6 @@ export default function pagina() {
                             <div className={styles.casillero}><button id="J10" onClick={obtenerCasillaEnemy}></button></div>
                         </div>
                     </div>
-                    <button onClick={probarImpactos}>Probar Impactos</button>
                 </div>
             </section>
         </>
