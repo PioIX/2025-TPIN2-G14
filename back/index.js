@@ -148,8 +148,10 @@ app.post('/crearPartida', async function (req, res) {
 
 app.post('/impactosJ1', async (req, res) => {
   try {
-    const impactos = await realizarQuery(`SELECT longitud, impactos, id_barco FROM Barcos
-       WHERE id_partida = ${req.body.id_partida} AND id_jugador = ${req.body.id_jugador}`);
+    const impactos = await realizarQuery(`
+      SELECT longitud, impactos, id_barco 
+      FROM Barcos
+      WHERE id_partida = ${req.body.id_partida} AND id_jugador = ${req.body.id_jugador}`);
     for(let barco of impactos){
       if (barco.impactos != barco.longuitud) {
         console.log(barco.longitud, barco.impactos)
