@@ -365,6 +365,7 @@ io.on("connection", (socket) => {
       listo: data.esListo,
       idJugador: data.jugadorId
     })
+    
   })
   socket.on("enviar_disparo", async data => {
     console.log("🎯 Disparo recibido desde:", data.emisor, "a jugador:", data.receptor, "a la casilla:", data.casilla);

@@ -51,13 +51,26 @@ export default function pagina() {
     const [confirmado, setConfirmado] = useState(false);
     const [coordenadasContrincante, setCoordenadasContrincante] = useState([]);
     const esJugador1 = Number(idLogged) === Number(id1);
-    const [miTurno, setMiTurno] = useState(Number(id1)); // ✅ Convertir a número desde el inicio
+    const [miTurno, setMiTurno] = useState(Number(id1)); 
     const primerTurno = Number(idLogged) === Number(id1);
     const [casillasUsadas, setCasillasUsadas] = useState([]);
     const [partidaIniciada, setPartidaIniciada] = useState(false);
     const [barcosListos, setBarcosListos] = useState(1);
+    const [barcosListosContrincante, setBarcosListosContricante] = useState(1);
     let mensajeAtaca = "";
 
+
+
+    useEffect(() => {
+        if (!socket || !isConnected || !idLogged) return;
+        socket.on("recibir_listos", data => {
+            if (idLogged != data.idJugador) {
+                setBarcosListosContricante(data.listo)
+
+            }
+        }
+        )
+    },[socket,isConnected,idLogged])
 
 
     function obtenerCasilla(e) {
@@ -175,7 +188,7 @@ export default function pagina() {
         })
 
     }, [socket, isConnected, idLogged, idPartida])
-    
+
     useEffect(() => {
         console.log(coordenadasSeleccionadas);
         console.log("primer casilla: ", primerCasilla);
@@ -264,10 +277,7 @@ export default function pagina() {
             console.log("Barco colocado en orientación:", orientacionDetectada);
         }
     }, [coordenadasSeleccionadas, selectedBarco, primerCasilla]);
-    useEffect(()=> {
-        socket.on();
-    })
-
+    
     useEffect(() => {
         for (let i = 0; i < barcosInfo.length; i++) {
             if (barcosInfo[i].id == selectedBarcoId) {
@@ -279,7 +289,7 @@ export default function pagina() {
     function verCoordenadas() {
         console.log(coordenadasContrincante)
     }
-    
+
     async function obtenerCasillaEnemy(e) {
         if (partidaIniciada === false) {
             alert("Espera a que el otro jugador coloque sus barcos")
@@ -309,7 +319,7 @@ export default function pagina() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data),
             });
-            if(response.res == true){
+            if (response.res == true) {
                 console.log("disparado")
             }
         } catch (error) {
@@ -400,8 +410,8 @@ export default function pagina() {
         });
         socket.emit("barcos_listos", {
             room: idPartida,
-            jugadorId : idLogged,
-            esListo : 3,
+            jugadorId: idLogged,
+            esListo: 3,
         })
     }
 
@@ -414,7 +424,7 @@ export default function pagina() {
     }
     if (miTurno == idLogged) {
         mensajeAtaca = "¡Tu turno!"
-    }else{
+    } else {
         mensajeAtaca = "Turno Rival"
     }
 
@@ -436,8 +446,8 @@ export default function pagina() {
                             <h2>{esJugador1 ? nombre1 : nombre2}</h2>
                             <p>Mi tablero</p>
                         </div>
-                        {barcosListos === 2 ?(<div className={styles.checkmark}>✓</div>):(<div></div>)
-                            
+                        {barcosListos === 2 ? (<div className={styles.checkmark}>✓</div>) : (<div></div>)
+
                         }
                     </div>
 
@@ -595,8 +605,8 @@ export default function pagina() {
                             <h2>{esJugador1 ? nombre2 : nombre1}</h2>
                             <p>Tablero enemigo</p>
                         </div>
-                        {barcosListos === 3 ?(<div className={styles.checkmark}>✓</div>):(<div></div>)
-                            
+                        {barcosListosContrincante === 3 ? (<div className={styles.checkmark}>✓</div>) : (<div></div>)
+
                         }
 
                     </div>
