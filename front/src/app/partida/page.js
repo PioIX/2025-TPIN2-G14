@@ -405,8 +405,9 @@ export default function pagina() {
         mensajeAtaca = "Turno Rival"
     }
     function chequearDisparos() {
-        if (esJugador1 == idLogged) {
-            console.log("entre al cosoñañañña")
+        if (Number(id1) === Number(idLogged)) {
+            console.log("CHEQUEAR DISPARO JUGADOR 1")
+
             async function probarImpactos1() {
                 try {
                     let info = {
@@ -435,7 +436,9 @@ export default function pagina() {
             }
             probarImpactos1();
         } else {
-            console.log("entre al cosoñañañña 2")
+
+            console.log("CHEQUEAR DISPARO JUGADOR 2")
+
             async function probarImpactos2() {
                 try {
                     let info = {

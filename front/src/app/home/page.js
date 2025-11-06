@@ -149,7 +149,7 @@ export default function Home() {
     if (
       selectedImg &&
       selectedImg2 &&
-      idLogged == jugador1Id &&
+      idLogged === jugador1Id &&
       jugador1Id &&
       jugador2Id &&
       jugador1Nombre &&
@@ -187,7 +187,7 @@ export default function Home() {
         console.log("error");
       }
     }
-  }, [selectedImg, selectedImg2, idPartida, jugador1Id, jugador2Id, jugador1Nombre, jugador2Nombre]);
+  }, [selectedImg, selectedImg2, jugador1Id, jugador2Id, jugador1Nombre, jugador2Nombre]);
 
   useEffect(() => {
     if (selectedImg && selectedImg2 && idPartida && jugador1Id && jugador2Id && jugador1Nombre && jugador2Nombre) {
