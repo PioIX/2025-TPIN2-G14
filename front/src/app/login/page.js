@@ -6,8 +6,10 @@ import Button from "@/components/Boton";
 import Input from "@/components/Input";
 import styles from "@/app/login/page.module.css";
 import PopUp from "@/components/PopUp";
+import { useConnection } from "../hooks/useConnection";
 
 export default function Login() {
+  const {url} = useConnection()
   const [contraseña, setContraseña] = useState("");
   const [nombre, setNombre] = useState("");
   const [user, setUser] = useState("");
@@ -48,7 +50,7 @@ export default function Login() {
   async function login() {
     let data = { user: user, contraseña: contraseña };
 
-    fetch("http://localhost:4000/login", {
+    fetch(url + "/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -81,7 +83,7 @@ export default function Login() {
       user: user,
     };
 
-    fetch("http://localhost:4000/register", {
+    fetch(url + "/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),

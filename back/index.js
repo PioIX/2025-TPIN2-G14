@@ -13,7 +13,7 @@ var port = process.env.PORT || 4000;
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors({
-  origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
+  origin: ["http://10.1.4.151:3000", "http://localhost:3000", "http://localhost:3002", "http://localhost:3003"],
   credentials: true
 }));
 
@@ -25,7 +25,7 @@ const server = app.listen(port, () => {
 
 const io = require('socket.io')(server, {
   cors: {
-    origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
+    origin: ["http://10.1.4.151:3000","http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
   }
@@ -146,7 +146,7 @@ app.post('/crearPartida', async function (req, res) {
   }
 });
 
-app.post('/impactosJ1', async (req, res) => {
+/*app.post('/impactosJ1', async (req, res) => {
   let hundido = false
   try {
     const impactos = await realizarQuery(`
@@ -154,7 +154,7 @@ app.post('/impactosJ1', async (req, res) => {
       FROM Barcos
       WHERE id_partida = ${req.body.id_partida} AND id_jugador = ${req.body.id_jugador}`);
     for (let barco of impactos) {
-      if (barco.impactos === barco.longuitud) {
+      if (barco.impactos === barco.longitud) {
         console.log(barco.longitud, barco.impactos)
         const hundir = await realizarQuery(`UPDATE Partidas SET barcos_hundidos_j1 = barcos_hundidos_j1 + 1
         WHERE id_partida = ${req.body.id_partida}`);
@@ -204,7 +204,115 @@ app.post('/impactosJ2', async (req, res) => {
     return res.send({ res: false, message: "Error al actualizar barcos hundidos" });
   }
 
+});*/
+
+//
+app.post('/impactosJ1', async (req, res) => {
+  try {
+    // Obtener barcos del jugador
+    const barcos = await realizarQuery(`
+      SELECT longitud, impactos, id_barco, hundido
+      FROM Barcos
+      WHERE id_partida = ${req.body.id_partida} 
+      AND id_jugador = ${req.body.id_jugador}
+    `);
+    
+    let barcosHundidosNuevos = 0;
+    
+    for (let barco of barcos) {
+      // ✅ Verificar si el barco RECIÉN se hundió (no estaba hundido antes)
+      if (barco.impactos === barco.longitud && !barco.hundido) {
+        // Marcar el barco como hundido
+        await realizarQuery(`
+          UPDATE Barcos 
+          SET hundido = true 
+          WHERE id_barco = ${barco.id_barco}
+        `);
+        
+        barcosHundidosNuevos++;
+        console.log(`Barco ${barco.id_barco} hundido!`);
+      }
+    }
+    
+    // Solo actualizar si hay nuevos barcos hundidos
+    if (barcosHundidosNuevos > 0) {
+      await realizarQuery(`
+        UPDATE Partidas 
+        SET barcos_hundidos_j1 = barcos_hundidos_j1 + ${barcosHundidosNuevos}
+        WHERE id_partida = ${req.body.id_partida}
+      `);
+      
+      return res.send({ 
+        res: true, 
+        message: `${barcosHundidosNuevos} barco(s) hundido(s)` 
+      });
+    }
+    
+    return res.send({ 
+      res: false, 
+      message: "Todavía no hundió ningún barco nuevo" 
+    });
+    
+  } catch (error) {
+    console.error("Error en /impactosJ1:", error);
+    return res.send({ 
+      res: false, 
+      message: "Error al actualizar barcos hundidos" 
+    });
+  }
 });
+
+app.post('/impactosJ2', async (req, res) => {
+  try {
+    const barcos = await realizarQuery(`
+      SELECT longitud, impactos, id_barco, hundido
+      FROM Barcos
+      WHERE id_partida = ${req.body.id_partida} 
+      AND id_jugador = ${req.body.id_jugador}
+    `);
+    
+    let barcosHundidosNuevos = 0;
+    
+    for (let barco of barcos) {
+      if (barco.impactos === barco.longitud && !barco.hundido) {
+        await realizarQuery(`
+          UPDATE Barcos 
+          SET hundido = true 
+          WHERE id_barco = ${barco.id_barco}
+        `);
+        
+        barcosHundidosNuevos++;
+        console.log(`Barco ${barco.id_barco} hundido!`);
+      }
+    }
+    
+    if (barcosHundidosNuevos > 0) {
+      await realizarQuery(`
+        UPDATE Partidas 
+        SET barcos_hundidos_j2 = barcos_hundidos_j2 + ${barcosHundidosNuevos}
+        WHERE id_partida = ${req.body.id_partida}
+      `);
+      
+      return res.send({ 
+        res: true, 
+        message: `${barcosHundidosNuevos} barco(s) hundido(s)` 
+      });
+    }
+    
+    return res.send({ 
+      res: false, 
+      message: "Todavía no hundió ningún barco nuevo" 
+    });
+    
+  } catch (error) {
+    console.error("Error en /impactosJ2:", error);
+    return res.send({ 
+      res: false, 
+      message: "Error al actualizar barcos hundidos" 
+    });
+  }
+});
+//
 
 app.post('/agregarBarco', async (req, res) => {
   try {
@@ -280,6 +388,7 @@ app.post('/disparo', async function (req, res) {
   }
 });
 
+app.post('/terminarPartida', )
 
 app.delete('/eliminarJugador', async function (req, res) {
   try {

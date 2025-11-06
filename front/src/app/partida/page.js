@@ -6,6 +6,7 @@ import Image from 'next/image';
 import PopUp from "@/components/PopUp";
 import styles from "@/app/partida/page.module.css"
 import Button from "@/components/Boton";
+import { useConnection } from "../hooks/useConnection";
 
 const coordenadasUtilizadas = [] // aca se van pushenado las cordenadas usadas x todoslos barcos de tu tablero
 const destructor1 = 2;
@@ -30,6 +31,7 @@ const barcosInfo = [
 ];
 
 export default function pagina() {
+    const {url} = useConnection();
     const { socket, isConnected } = useSocket();
     const searchParams = useSearchParams();
     const nombre1 = searchParams.get("jugador1Nombre");
@@ -296,7 +298,7 @@ export default function pagina() {
             id_jugador: idLogged,
         }
         try {
-            const response = await fetch("http://localhost:4000/disparo", {
+            const response = await fetch(url + "/disparo", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data),
@@ -372,7 +374,7 @@ export default function pagina() {
         };
 
         try {
-            const res = await fetch("http://localhost:4000/agregarBarco", {
+            const res = await fetch(url + "/agregarBarco", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body),
@@ -414,7 +416,7 @@ export default function pagina() {
                         id_jugador: idLogged,
                         id_partida: idPartida
                     }
-                    const response = await fetch("http://localhost:4000/impactosJ1", {
+                    const response = await fetch(url + "/impactosJ1", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify(info)
@@ -445,7 +447,7 @@ export default function pagina() {
                         id_jugador: idLogged,
                         id_partida: idPartida
                     }
-                    const response = await fetch("http://localhost:4000/impactosJ2", {
+                    const response = await fetch(url + "/impactosJ2", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify(info)

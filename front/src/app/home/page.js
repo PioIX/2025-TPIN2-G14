@@ -9,8 +9,10 @@ import { useSocket } from "../hooks/useSocket";
 import Image from "next/image";
 import PopUp from "@/components/PopUp";
 import { Poppins } from 'next/font/google'; // 👈 Agregá esto
+import { useConnection } from "../hooks/useConnection";
 
 export default function Home() {
+  const {url} = useConnection();
   const searchParams = useSearchParams();
   const usuario = searchParams.get("user");
   const idLogged = searchParams.get("idLogged");
@@ -63,7 +65,7 @@ export default function Home() {
   useEffect(() => {
     if (selectedPlayerId) {
       try {
-        const response = fetch("http://localhost:4000/getUsuarios", {
+        const response = fetch(url + "/getUsuarios", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -160,7 +162,7 @@ export default function Home() {
         jugador2: jugador2Id,
       };
       try {
-        fetch("http://localhost:4000/crearPartida", {
+        fetch(url + "/crearPartida", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -267,7 +269,7 @@ export default function Home() {
 
     for (let i = 0; i < usuariosEnLinea.length; i++) {
       try {
-        const response = await fetch("http://localhost:4000/getUsuarios", {
+        const response = await fetch(url + "/getUsuarios", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
