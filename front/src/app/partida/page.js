@@ -111,7 +111,7 @@ export default function pagina() {
 
                 const btn = document.getElementById(data.casilla);
                 if (btn) {
-                    btn.style.backgroundColor = data.impactado ? 'red' : 'lightblue';
+                    btn.style.backgroundColor = data.impactado ? 'red' : 'blue';
                     btn.disabled = true;
                 }
             }
@@ -119,7 +119,7 @@ export default function pagina() {
             if (data.emisor == Number(idLogged)) {
                 const btnEnemy = document.querySelectorAll(`#${data.casilla}`)[1];
                 if (btnEnemy) {
-                    btnEnemy.style.backgroundColor = data.impactado ? 'red' : 'lightblue';
+                    btnEnemy.style.backgroundColor = data.impactado ? 'red' : 'blue';
                     btnEnemy.disabled = true;
                 }
             }

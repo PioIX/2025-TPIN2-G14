@@ -205,19 +205,21 @@ app.post('/agregarBarco', async (req, res) => {
 });
 app.get('/traerPuntajes', async (req, res) => {
   try {
-    let puntos = `SELECT id_ganador, COUNT(id_ganador) AS partidas_ganadas
+    const respuesta = await realizarQuery(`SELECT id_ganador, COUNT(id_ganador) AS partidas_ganadas
       FROM Partidas
       WHERE id_ganador IS NOT NULL
       GROUP BY id_ganador
       ORDER BY partidas_ganadas DESC
-      LIMIT 10;`
-    if(puntos.lenght){
-      return res.send({res: true, ganadores: puntos})
+      LIMIT 10;`)
+    console.log(respuesta.length)
+    if(respuesta.length == 0 ){
+      return res.send({res: false, message: "error"});
     }else{
-      return res.send({res:false, msj: error})
+      return res.send({res: true, message: respuesta});
     }
   } catch {
-
+    console.log("error en traer puntajes");
+    return res.send({res:false, msj: "error"});
   }
 })
 app.post('/disparo', async function (req, res) {
@@ -304,6 +306,8 @@ app.get('/traerBarcos', async function (req, res) {
     res.send({ res: false, message: "Error para traer los barcos." });
   }
 });
+
+
 
 let jugadoresEnLinea = [];
 

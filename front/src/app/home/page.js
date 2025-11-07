@@ -290,8 +290,9 @@ export default function Home() {
 
     setNombresEnLinea(usuariosCompletos);
   }
-  function scores() {
-
+  function irPuntajes() {
+    let url = "/puntajes";
+    router.push(url);
   }
 
   function irReglas() {
@@ -377,7 +378,7 @@ export default function Home() {
             </PopUp>
 
             {/* Card: Ver puntajes */}
-            <button className={`${styles.cardButton} ${styles.cardScores}`} onClick={scores}>
+            <button className={`${styles.cardButton} ${styles.cardScores}`} onClick={irPuntajes}>
               <span className={styles.cardTitle}>Ver puntajes</span>
             </button>
 
