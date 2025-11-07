@@ -11,6 +11,7 @@ import PopUp from "@/components/PopUp";
 import { Poppins } from 'next/font/google'; // 👈 Agregá esto
 import { useConnection } from "../hooks/useConnection";
 
+
 export default function Home() {
   const {url} = useConnection();
   const searchParams = useSearchParams();
@@ -31,6 +32,7 @@ export default function Home() {
   const [jugador1Id, setJugador1Id] = useState(null);
   const [jugador2Id, setJugador2Id] = useState(null);
   const [selectedImg2, setSelectedImg2] = useState(null);
+  const [esperando, setEsperando] = useState(1);
 
 
 
@@ -239,6 +241,7 @@ export default function Home() {
         jugador2Id: selectedPlayerId,
         imagen1: selectedImg,
       });
+      setEsperando(2)//ACA ESTOY LABURANDO 
       console.log("Informacion enviada a jugador 2");
     }
   }
@@ -260,9 +263,7 @@ export default function Home() {
     });
   }
 
-  function scores() {
-    // TODO: navegación o popup de puntajes
-  }
+
 
   async function jugadores() {
     const usuariosCompletos = [];
@@ -292,6 +293,10 @@ export default function Home() {
 
     setNombresEnLinea(usuariosCompletos);
   }
+  function irPuntajes() {
+    let url = "/puntajes";
+    router.push(url);
+  }
 
   function irReglas() {
     let url = "/reglas";
@@ -303,7 +308,7 @@ export default function Home() {
       <section>
         <div className={styles.header}>
           <h1 >¡Bienvenido {usuario} a Batalla Esponjosa!  </h1>
-          
+
         </div>
       </section>
 
@@ -319,57 +324,64 @@ export default function Home() {
                 </button>
               }
             >
-              <div className={styles.crearPartidaPopup1}>
-                <div className={styles.parte1}>
-                  <h2 className={styles.titulo}>Crear partida</h2>
-                  <h2 className={styles.text}>Elegí uno de los jugadores en línea:</h2>
-                  <select
-                    onChange={(e) => setSelectedPlayerId(e.target.value)}
-                    className={styles.selectJugador}
-                  >
-                    <option className={styles.option} key={0} value={0}>
-                      Sin seleccionar
-                    </option>
-                    {nombresEnLinea.length > 1 ? (
-                      nombresEnLinea.map((nombre) => {
-                        if (nombre.id !== Number(idLogged)) {
-                          return (
-                            <option className={styles.option} key={nombre.id} value={nombre.id}>
-                              {nombre.nombre}
-                            </option>
-                          );
-                        }
-                      })
-                    ) : (
-                      <option className={styles.option}>No hay jugadores en línea</option>
-                    )}
-                  </select>
-                </div>
-              </div>
+              {esperando === 1 ? (
+                <>
+                  <div className={styles.crearPartidaPopup1}>
+                    <div className={styles.parte1}>
+                      <h2 className={styles.titulo}>Crear partida</h2>
+                      <h2 className={styles.text}>Elegí uno de los jugadores en línea:</h2>
+                      <select
+                        onChange={(e) => setSelectedPlayerId(e.target.value)}
+                        className={styles.selectJugador}
+                      >
+                        <option className={styles.option} key={0} value={0}>
+                          Sin seleccionar
+                        </option>
+                        {nombresEnLinea.length > 1 ? (
+                          nombresEnLinea.map((nombre) => {
+                            if (nombre.id !== Number(idLogged)) {
+                              return (
+                                <option className={styles.option} key={nombre.id} value={nombre.id}>
+                                  {nombre.nombre}
+                                </option>
+                              );
+                            }
+                            return null; // Es importante retornar algo cuando no cumple la condición
+                          })
+                        ) : (
+                          <option className={styles.option}>No hay jugadores en línea</option>
+                        )}
+                      </select>
+                    </div>
+                  </div>
 
-              <div className={styles.crearPartidaPopup2}>
-                <h2 className={styles.text}>Elegí un personaje:</h2>
-                <div className={styles.personajes}>
-                  {personajes.map((personaje, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedImg(personaje)}
-                      className={`${styles.botonFoto} ${selectedImg === personaje ? styles.selected : ""}`}
-                    >
-                      <img src={personaje} alt={`Personaje ${index}`} className={styles.personaje} />
-                    </button>
-                  ))}
-                </div>
-                <div className={styles.crearP}>
-                  <button className={styles.botonCrearPartida} onClick={crearPartida}>
-                    Crear partida
-                  </button>
-                </div>
-              </div>
+                  <div className={styles.crearPartidaPopup2}>
+                    <h2 className={styles.text}>Elegí un personaje:</h2>
+                    <div className={styles.personajes}>
+                      {personajes.map((personaje, index) => (
+                        <button
+                          key={index}
+                          onClick={() => setSelectedImg(personaje)}
+                          className={`${styles.botonFoto} ${selectedImg === personaje ? styles.selected : ""}`}
+                        >
+                          <img src={personaje} alt={`Personaje ${index}`} className={styles.personaje} />
+                        </button>
+                      ))}
+                    </div>
+                    <div className={styles.crearP}>
+                      <button className={styles.botonCrearPartida} onClick={crearPartida}>
+                        Crear partida
+                      </button>
+                    </div>
+                  </div>
+                </>
+              ) : esperando === 2 ? (
+                <div>Esperando al otro jugador</div>
+              ) : null}
             </PopUp>
 
             {/* Card: Ver puntajes */}
-            <button className={`${styles.cardButton} ${styles.cardScores}`} onClick={scores}>
+            <button className={`${styles.cardButton} ${styles.cardScores}`} onClick={irPuntajes}>
               <span className={styles.cardTitle}>Ver puntajes</span>
             </button>
 

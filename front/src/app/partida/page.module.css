@@ -253,3 +253,16 @@
     width: 3.8rem;
   }
 }
+
+.checkmark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  background-color: #8DC73F;
+  border-radius: 50%;
+  color: white;
+  font-size: 32px;
+  font-weight: bold;
+}

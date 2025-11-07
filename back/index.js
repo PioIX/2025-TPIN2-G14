@@ -342,7 +342,25 @@ app.post('/agregarBarco', async (req, res) => {
     res.send({ res: false, message: "Error al agregar barcos" });
   }
 });
-
+app.get('/traerPuntajes', async (req, res) => {
+  try {
+    const respuesta = await realizarQuery(`SELECT id_ganador, COUNT(id_ganador) AS partidas_ganadas
+      FROM Partidas
+      WHERE id_ganador IS NOT NULL
+      GROUP BY id_ganador
+      ORDER BY partidas_ganadas DESC
+      LIMIT 10;`)
+    console.log(respuesta.length)
+    if(respuesta.length == 0 ){
+      return res.send({res: false, message: "error"});
+    }else{
+      return res.send({res: true, message: respuesta});
+    }
+  } catch {
+    console.log("error en traer puntajes");
+    return res.send({res:false, msj: "error"});
+  }
+})
 app.post('/disparo', async function (req, res) {
   try {
     console.log(req.body);
@@ -445,6 +463,8 @@ app.get('/traerBarcos', async function (req, res) {
   }
 });
 
+
+
 let jugadoresEnLinea = [];
 
 const maxPlayers = 3;
@@ -516,7 +536,13 @@ io.on("connection", (socket) => {
       imagen1: data.imagen1
     });
   });
+  socket.on("barcos_listos", async data => {
+    io.to(data.room).emit("recibir_listo", {
+      listo: data.esListo,
+      idJugador: data.jugadorId
+    })
 
+  })
   socket.on("enviar_disparo", async data => {
     console.log("🎯 Disparo recibido desde:", data.emisor, "a jugador:", data.receptor, "a la casilla:", data.casilla);
 
