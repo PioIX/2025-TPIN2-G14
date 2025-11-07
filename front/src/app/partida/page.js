@@ -31,7 +31,7 @@ const barcosInfo = [
 ];
 
 export default function pagina() {
-    const {url} = useConnection();
+    const { url } = useConnection();
     const { socket, isConnected } = useSocket();
     const searchParams = useSearchParams();
     const nombre1 = searchParams.get("jugador1Nombre");
@@ -104,7 +104,6 @@ export default function pagina() {
 
         socket.on("partida_iniciada", handlePartidaIniciada);
 
-        // ✅ AGREGAR CLEANUP
         return () => {
             socket.off("partida_iniciada", handlePartidaIniciada);
         };
@@ -142,7 +141,7 @@ export default function pagina() {
         };
 
         socket.on("recibir_disparo", handleRecibirDisparo);
-        setDisparosRecibidos(prev=> prev+1)
+        setDisparosRecibidos(prev => prev + 1)
         return () => {
             socket.off("recibir_disparo", handleRecibirDisparo);
         };
@@ -164,7 +163,7 @@ export default function pagina() {
         });*/
         socket.on("aceptar_turno", data => {
             if (data.receptor == Number(idLogged)) {
-                
+
                 setMiTurno(data.receptor)
                 console.log("Es mi turno")
             }
@@ -277,7 +276,7 @@ export default function pagina() {
     async function obtenerCasillaEnemy(e) {
         if (partidaIniciada === false) {
             alert("Espera a que el otro jugador coloque sus barcos")
-            return; // ✅ Agregado
+            return;
         }
         if (Number(miTurno) !== Number(idLogged)) {
             alert("No es tu turno perrito paciencia")
@@ -322,11 +321,7 @@ export default function pagina() {
 
             setMiTurno(Number(nuevoTurno));
             console.log("🔄 Turno cambiado a:", nuevoTurno);
-        }, 500); // Pequeño delay para que se procese el disparo primero
-
-    }
-
-    function verSelectedBarco() {
+        }, 500);
 
     }
     function validarCasillasContiguas(casillas, orientacion) {
@@ -469,8 +464,42 @@ export default function pagina() {
             }
             probarImpactos2();
         }
-        
+
     }
+
+    useEffect(() => {
+        const finalizarPartida = async () => {
+            if (!id1 || !id2 || !idPartida) return;
+
+            const datos = {
+                id_partida: idPartida,
+                id1: id1,
+                id2: id2
+            };
+
+            try {
+                const response = await fetch(url + "/terminarPartida", {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(datos)
+                });
+
+                const data = await response.json();
+
+                if (data.res) {
+                    alert("La partida ha terminado correctamente.");
+                } else {
+                    alert("Hubo un error al finalizar la partida.");
+                }
+            } catch (error) {
+                console.error("Error al finalizar la partida:", error);
+                alert("Error en la conexión al servidor.");
+            }
+        };
+        finalizarPartida();
+    }, [idPartida, id1, id2]);
 
     return (
         <>
