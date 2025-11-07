@@ -7,7 +7,7 @@ import PopUp from "@/components/PopUp";
 import styles from "@/app/partida/page.module.css"
 import Button from "@/components/Boton";
 
-const coordenadasUtilizadas = [] // aca se van pushenado las cordenadas usadas x todoslos barcos de tu tablero
+const coordenadasUtilizadas = [] 
 const destructor1 = 2;
 const destructor2 = 2;
 const crucero = 3;
@@ -17,10 +17,7 @@ const coordDestructor1 = []
 const coordDestructor2 = []
 const coordCrucero = []
 const coordAcorazado = []
-const coordPortaAviones = [] //aca se pushean las coordeanadas cuandop ubicas tus barcos
-//se comparan entre el length de los barcos y el array de las
-//coordenadas, para saber cuando termine de seleccionar los 
-//casilleros de un barco y asi aparece la imagen en pantalla 
+const coordPortaAviones = [] 
 const barcosInfo = [
     { nombre: 'destructor1', largo: 2, img: '/imagenes/destructorV.png', imgH: '/imagenes/destructorH.png', id: 0 },
     { nombre: 'destructor2', largo: 2, img: '/imagenes/destructorV.png', imgH: '/imagenes/destructorH.png', id: 1 },
@@ -51,13 +48,13 @@ export default function pagina() {
     const [confirmado, setConfirmado] = useState(false);
     const [coordenadasContrincante, setCoordenadasContrincante] = useState([]);
     const esJugador1 = Number(idLogged) === Number(id1);
-    const [miTurno, setMiTurno] = useState(Number(id1)); // ✅ Convertir a número desde el inicio
+    const [miTurno, setMiTurno] = useState(Number(id1));
     const primerTurno = Number(idLogged) === Number(id1);
-    let mensajeAtaca = ""
     const [casillasUsadas, setCasillasUsadas] = useState([]);
     const [partidaIniciada, setPartidaIniciada] = useState(false);
-
-
+    const [barcosListos, setBarcosListos] = useState(1);
+    const [barcosListosContrincante, setBarcosListosContricante] = useState(1);
+    let mensajeAtaca = "";
 
     function obtenerCasilla(e) {
         const id = e.target.id;
@@ -65,40 +62,26 @@ export default function pagina() {
             setPrimerCasilla(id)
         }
         setCoordenadasSeleccionadas(prev => [...prev, id]);
-        setCasillasUsadas(prev => [...prev, id]); // Agrega nuevas coordenadas al arreglo
-        // hacer algo con el id
+        setCasillasUsadas(prev => [...prev, id]); 
     }
 
     function detectarOrientacion(casillas) {
-        if (casillas.length <= 1) return 'horizontal'; // Por defecto
+        if (casillas.length <= 1) return 'horizontal';
 
         const coords = casillas.map(c => ({
             letra: c.charCodeAt(0),
             numero: parseInt(c.slice(1))
         }));
 
-        // Verificar si todas tienen la misma letra (horizontal)
         const mismaFila = coords.every(c => c.letra === coords[0].letra);
         if (mismaFila) return 'horizontal';
 
-        // Verificar si todas tienen el mismo número (vertical)
         const mismaColumna = coords.every(c => c.numero === coords[0].numero);
         if (mismaColumna) return 'vertical';
 
-        // Si no son ni horizontal ni vertical, retornar null (inválido)
         return null;
     }
 
-
-    /*useEffect(() => {
-        if (barcosContrincante.length > 0) {
-            for (let i = 0; i < barcosContrincante.length; i++) {
-                for (let j = 0; j < barcosContrincante[i].coordenadas.length; j++) {
-                    setCoordenadasContrincante(prev => [...prev, barcosContrincante[i].coordenadas[j]])
-                }
-            }
-        }
-    }, [barcosContrincante])*/
     useEffect(() => {
         if (!socket || !isConnected || !idLogged) return;
 
@@ -110,7 +93,6 @@ export default function pagina() {
 
         socket.on("partida_iniciada", handlePartidaIniciada);
 
-        // ✅ AGREGAR CLEANUP
         return () => {
             socket.off("partida_iniciada", handlePartidaIniciada);
         };
@@ -123,23 +105,21 @@ export default function pagina() {
 
             if (data.receptor == Number(idLogged)) {
                 const mensaje = data.impactado
-                    ? `💥 ¡Te impactaron en ${data.casilla}!`
-                    : `💧 Fallaron en ${data.casilla} (agua)`;
+                    ? `¡Te impactaron en ${data.casilla}!`
+                    : `Fallaron en ${data.casilla} (agua)`;
                 alert(mensaje);
 
-                // Marcar visualmente la casilla en tu tablero
                 const btn = document.getElementById(data.casilla);
                 if (btn) {
-                    btn.style.backgroundColor = data.impactado ? 'red' : 'lightblue';
+                    btn.style.backgroundColor = data.impactado ? 'red' : 'blue';
                     btn.disabled = true;
                 }
             }
 
-            // Si eres el emisor, marca en el tablero enemigo
             if (data.emisor == Number(idLogged)) {
-                const btnEnemy = document.querySelectorAll(`#${data.casilla}`)[1]; // El segundo tablero
+                const btnEnemy = document.querySelectorAll(`#${data.casilla}`)[1];
                 if (btnEnemy) {
-                    btnEnemy.style.backgroundColor = data.impactado ? 'red' : 'lightblue';
+                    btnEnemy.style.backgroundColor = data.impactado ? 'red' : 'blue';
                     btnEnemy.disabled = true;
                 }
             }
@@ -151,6 +131,17 @@ export default function pagina() {
             socket.off("recibir_disparo", handleRecibirDisparo);
         };
     }, [socket, isConnected, idLogged]);
+
+
+    useEffect(() => {
+        if (!socket || !isConnected || !idLogged) return;
+        socket.on("recibir_listo", data => {
+            if (idLogged != data.idJugador) {
+                setBarcosListosContricante(data.listo)
+            }
+        }
+        )
+    }, [socket, isConnected, idLogged])
 
     useEffect(() => {
         if (!socket || !isConnected || !idLogged) return;
@@ -174,14 +165,13 @@ export default function pagina() {
         })
 
     }, [socket, isConnected, idLogged, idPartida])
-    
+
     useEffect(() => {
         console.log(coordenadasSeleccionadas);
         console.log("primer casilla: ", primerCasilla);
         console.log("Barco: ", selectedBarco);
 
         if (selectedBarco && coordenadasSeleccionadas.length === selectedBarco.largo) {
-            // Detectar orientación automáticamente
             const orientacionDetectada = detectarOrientacion(coordenadasSeleccionadas);
 
             if (!orientacionDetectada) {
@@ -191,7 +181,6 @@ export default function pagina() {
                 return;
             }
 
-            // Validar que las casillas sean contiguas
             const sonContiguas = validarCasillasContiguas(coordenadasSeleccionadas, orientacionDetectada);
 
             if (!sonContiguas) {
@@ -200,10 +189,8 @@ export default function pagina() {
                 setPrimerCasilla(null);
                 return;
             }
-            // Encontrar el botón de la primera casilla
             const primerBoton = document.getElementById(primerCasilla);
             if (primerBoton) {
-                // Obtener el div contenedor (casillero) del botón
                 const primerCasillero = primerBoton.parentElement;
 
                 const imgContainer = document.createElement('div');
@@ -213,7 +200,6 @@ export default function pagina() {
                 imgContainer.style.zIndex = '10';
                 imgContainer.style.pointerEvents = 'none';
 
-                // Calcular el tamaño según orientación DETECTADA
                 if (orientacionDetectada === 'horizontal') {
                     imgContainer.style.width = `calc(${selectedBarco.largo} * 100%)`;
                     imgContainer.style.height = '100%';
@@ -222,7 +208,6 @@ export default function pagina() {
                     imgContainer.style.height = `calc(${selectedBarco.largo} * 100%)`;
                 }
 
-                // Crear y agregar la imagen según orientación DETECTADA
                 const img = document.createElement('img');
                 img.src = orientacionDetectada === 'horizontal' ? selectedBarco.imgH : selectedBarco.img;
                 img.alt = selectedBarco.nombre;
@@ -232,11 +217,9 @@ export default function pagina() {
 
                 imgContainer.appendChild(img);
 
-                // Agregar posición relativa al casillero para que funcione el absolute
                 primerCasillero.style.position = 'relative';
                 primerCasillero.appendChild(imgContainer);
 
-                // Deshabilitar los botones usados y marcarlos visualmente
                 coordenadasSeleccionadas.forEach(coord => {
                     const btn = document.getElementById(coord);
                     if (btn) {
@@ -246,7 +229,6 @@ export default function pagina() {
                 });
             }
 
-            // Guardar el barco colocado
             setBarcosColocados(prev => [...prev, {
                 barco: selectedBarco,
                 coordenadas: [...coordenadasSeleccionadas],
@@ -254,7 +236,6 @@ export default function pagina() {
                 orientacion: orientacionDetectada,
                 coordenadas: coordenadasSeleccionadas
             }]);
-            // Resetear para el siguiente barco
             setCoordenadasSeleccionadas([]);
             setPrimerCasilla(null);
             setSelectedBarco(null);
@@ -263,7 +244,6 @@ export default function pagina() {
             console.log("Barco colocado en orientación:", orientacionDetectada);
         }
     }, [coordenadasSeleccionadas, selectedBarco, primerCasilla]);
-
 
     useEffect(() => {
         for (let i = 0; i < barcosInfo.length; i++) {
@@ -276,11 +256,11 @@ export default function pagina() {
     function verCoordenadas() {
         console.log(coordenadasContrincante)
     }
-    
+
     async function obtenerCasillaEnemy(e) {
         if (partidaIniciada === false) {
             alert("Espera a que el otro jugador coloque sus barcos")
-            return; // ✅ Agregado
+            return; 
         }
         if (Number(miTurno) !== Number(idLogged)) {
             alert("No es tu turno perrito paciencia")
@@ -306,7 +286,7 @@ export default function pagina() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data),
             });
-            if(response.res == true){
+            if (response.res == true) {
                 console.log("disparado")
             }
         } catch (error) {
@@ -335,14 +315,12 @@ export default function pagina() {
     function validarCasillasContiguas(casillas, orientacion) {
         if (casillas.length <= 1) return true;
 
-        // Extraer letra y número de cada casilla
         const coords = casillas.map(c => ({
             letra: c.charCodeAt(0),
             numero: parseInt(c.slice(1))
         }));
 
         if (orientacion === 'horizontal') {
-            // Verificar misma fila y números consecutivos
             const mismaFila = coords.every(c => c.letra === coords[0].letra);
             const numerosOrdenados = coords.map(c => c.numero).sort((a, b) => a - b);
             const consecutivos = numerosOrdenados.every((num, i) =>
@@ -350,7 +328,6 @@ export default function pagina() {
             );
             return mismaFila && consecutivos;
         } else {
-            // Verificar misma columna y letras consecutivas
             const mismaColumna = coords.every(c => c.numero === coords[0].numero);
             const letrasOrdenadas = coords.map(c => c.letra).sort((a, b) => a - b);
             const consecutivas = letrasOrdenadas.every((letra, i) =>
@@ -365,7 +342,7 @@ export default function pagina() {
             alert("Poné los 5 barcos primero");
             return;
         }
-
+        setBarcosListos(2);
         const body = {
             id_partida: idPartida,
             id_jugador: idLogged,
@@ -395,6 +372,11 @@ export default function pagina() {
             casillas: casillasUsadas,
             barcos: barcosColocados
         });
+        socket.emit("barcos_listos", {
+            room: idPartida,
+            jugadorId: idLogged,
+            esListo: 3,
+        })
     }
 
     let mensajeHeader = "Ubicá tus barcos, seleccionando un barco y luego las casillas";
@@ -406,7 +388,7 @@ export default function pagina() {
     }
     if (miTurno == idLogged) {
         mensajeAtaca = "¡Tu turno!"
-    }else{
+    } else {
         mensajeAtaca = "Turno Rival"
     }
 
@@ -428,6 +410,9 @@ export default function pagina() {
                             <h2>{esJugador1 ? nombre1 : nombre2}</h2>
                             <p>Mi tablero</p>
                         </div>
+                        {barcosListos === 2 ? (<div className={styles.checkmark}>✓</div>) : (<div></div>)
+
+                        }
                     </div>
 
                     <div className={styles.tablero}>
@@ -584,6 +569,9 @@ export default function pagina() {
                             <h2>{esJugador1 ? nombre2 : nombre1}</h2>
                             <p>Tablero enemigo</p>
                         </div>
+                        {barcosListosContrincante === 3 ? (<div className={styles.checkmark}>✓</div>) : (<div></div>)
+
+                        }
 
                     </div>
                     <div className={styles.tablero}>
