@@ -8,9 +8,12 @@ import styles from "@/app/home/page.module.css";
 import { useSocket } from "../hooks/useSocket";
 import Image from "next/image";
 import PopUp from "@/components/PopUp";
-import { Poppins } from 'next/font/google';
+import { Poppins } from 'next/font/google'; // 👈 Agregá esto
+import { useConnection } from "../hooks/useConnection";
+
 
 export default function Home() {
+  const {url} = useConnection();
   const searchParams = useSearchParams();
   const usuario = searchParams.get("user");
   const idLogged = searchParams.get("idLogged");
@@ -64,7 +67,7 @@ export default function Home() {
   useEffect(() => {
     if (selectedPlayerId) {
       try {
-        const response = fetch("http://localhost:4000/getUsuarios", {
+        const response = fetch(url + "/getUsuarios", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -150,7 +153,7 @@ export default function Home() {
     if (
       selectedImg &&
       selectedImg2 &&
-      idLogged == jugador1Id &&
+      idLogged === jugador1Id &&
       jugador1Id &&
       jugador2Id &&
       jugador1Nombre &&
@@ -161,7 +164,7 @@ export default function Home() {
         jugador2: jugador2Id,
       };
       try {
-        fetch("http://localhost:4000/crearPartida", {
+        fetch(url + "/crearPartida", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -188,7 +191,7 @@ export default function Home() {
         console.log("error");
       }
     }
-  }, [selectedImg, selectedImg2, idPartida, jugador1Id, jugador2Id, jugador1Nombre, jugador2Nombre]);
+  }, [selectedImg, selectedImg2, jugador1Id, jugador2Id, jugador1Nombre, jugador2Nombre]);
 
   useEffect(() => {
     if (selectedImg && selectedImg2 && idPartida && jugador1Id && jugador2Id && jugador1Nombre && jugador2Nombre) {
@@ -267,7 +270,7 @@ export default function Home() {
 
     for (let i = 0; i < usuariosEnLinea.length; i++) {
       try {
-        const response = await fetch("http://localhost:4000/getUsuarios", {
+        const response = await fetch(url + "/getUsuarios", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
