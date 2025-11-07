@@ -6,6 +6,7 @@ import Image from 'next/image';
 import PopUp from "@/components/PopUp";
 import styles from "@/app/partida/page.module.css"
 import Button from "@/components/Boton";
+import { useConnection } from "../hooks/useConnection";
 
 const coordenadasUtilizadas = [] 
 const destructor1 = 2;
@@ -27,6 +28,7 @@ const barcosInfo = [
 ];
 
 export default function pagina() {
+    const { url } = useConnection();
     const { socket, isConnected } = useSocket();
     const searchParams = useSearchParams();
     const nombre1 = searchParams.get("jugador1Nombre");
@@ -52,9 +54,11 @@ export default function pagina() {
     const primerTurno = Number(idLogged) === Number(id1);
     const [casillasUsadas, setCasillasUsadas] = useState([]);
     const [partidaIniciada, setPartidaIniciada] = useState(false);
+    const [disparosRecibidos, setDisparosRecibidos] = useState(0);
     const [barcosListos, setBarcosListos] = useState(1);
     const [barcosListosContrincante, setBarcosListosContricante] = useState(1);
     let mensajeAtaca = "";
+
 
     function obtenerCasilla(e) {
         const id = e.target.id;
@@ -81,6 +85,7 @@ export default function pagina() {
 
         return null;
     }
+
 
     useEffect(() => {
         if (!socket || !isConnected || !idLogged) return;
@@ -123,10 +128,12 @@ export default function pagina() {
                     btnEnemy.disabled = true;
                 }
             }
+
+            chequearDisparos()
         };
 
         socket.on("recibir_disparo", handleRecibirDisparo);
-
+        setDisparosRecibidos(prev => prev + 1)
         return () => {
             socket.off("recibir_disparo", handleRecibirDisparo);
         };
@@ -159,6 +166,7 @@ export default function pagina() {
         });*/
         socket.on("aceptar_turno", data => {
             if (data.receptor == Number(idLogged)) {
+
                 setMiTurno(data.receptor)
                 console.log("Es mi turno")
             }
@@ -261,6 +269,7 @@ export default function pagina() {
         if (partidaIniciada === false) {
             alert("Espera a que el otro jugador coloque sus barcos")
             return; 
+
         }
         if (Number(miTurno) !== Number(idLogged)) {
             alert("No es tu turno perrito paciencia")
@@ -281,7 +290,7 @@ export default function pagina() {
             id_jugador: idLogged,
         }
         try {
-            const response = await fetch("http://localhost:4000/disparo", {
+            const response = await fetch(url + "/disparo", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data),
@@ -305,11 +314,7 @@ export default function pagina() {
 
             setMiTurno(Number(nuevoTurno));
             console.log("🔄 Turno cambiado a:", nuevoTurno);
-        }, 500); // Pequeño delay para que se procese el disparo primero
-
-    }
-
-    function verSelectedBarco() {
+        }, 500);
 
     }
     function validarCasillasContiguas(casillas, orientacion) {
@@ -354,7 +359,7 @@ export default function pagina() {
         };
 
         try {
-            const res = await fetch("http://localhost:4000/agregarBarco", {
+            const res = await fetch(url + "/agregarBarco", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body),
@@ -391,6 +396,105 @@ export default function pagina() {
     } else {
         mensajeAtaca = "Turno Rival"
     }
+    function chequearDisparos() {
+        if (Number(id1) === Number(idLogged)) {
+            console.log("CHEQUEAR DISPARO JUGADOR 1")
+
+            async function probarImpactos1() {
+                try {
+                    let info = {
+                        id_jugador: idLogged,
+                        id_partida: idPartida
+                    }
+                    const response = await fetch(url + "/impactosJ1", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(info)
+                    });
+
+                    const data = await response.json();
+                    console.log("Respuesta de /impactos:", data);
+
+                    if (data.res) {
+                        console.log("Impactos obtenidos:", data.impactos);
+                    } else {
+                        console.log("Error al llamar /impactos:");
+                        //alert("Error");
+                    }
+                } catch (error) {
+                    console.log("Error al llamar /impactos:", error);
+                    //alert("Error al conectar con el servidor");
+                }
+            }
+            probarImpactos1();
+        } else {
+
+            console.log("CHEQUEAR DISPARO JUGADOR 2")
+
+            async function probarImpactos2() {
+                try {
+                    let info = {
+                        id_jugador: idLogged,
+                        id_partida: idPartida
+                    }
+                    const response = await fetch(url + "/impactosJ2", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(info)
+                    });
+
+                    const data = await response.json();
+                    console.log("Respuesta de /impactos:", data);
+
+                    if (data.res) {
+                        console.log("Impactos obtenidos:", data.impactos);
+                    } else {
+                        //alert("Error");
+                        console.log("Error al llamar /impactos:");
+                    }
+                } catch (error) {
+                    console.log("Error al llamar /impactos:", error);
+                    //alert("Error al conectar con el servidor");
+                }
+            }
+            probarImpactos2();
+        }
+
+    }
+
+    useEffect(() => {
+        const finalizarPartida = async () => {
+            if (!id1 || !id2 || !idPartida) return;
+
+            const datos = {
+                id_partida: idPartida,
+                id1: id1,
+                id2: id2
+            };
+
+            try {
+                const response = await fetch(url + "/terminarPartida", {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(datos)
+                });
+
+                const data = await response.json();
+
+                if (data.res) {
+                    alert("La partida ha terminado correctamente.");
+                } else {
+                    alert("Hubo un error al finalizar la partida.");
+                }
+            } catch (error) {
+                console.error("Error al finalizar la partida:", error);
+                alert("Error en la conexión al servidor.");
+            }
+        };
+        finalizarPartida();
+    }, [idPartida, id1, id2]);
 
     return (
         <>
