@@ -68,7 +68,7 @@ export default function pagina() {
         setCoordenadasSeleccionadas(prev => [...prev, id]);
         setCasillasUsadas(prev => [...prev, id]); 
     }
-
+    //orientacion
     function detectarOrientacion(casillas) {
         if (casillas.length <= 1) return 'horizontal';
 
@@ -85,8 +85,7 @@ export default function pagina() {
 
         return null;
     }
-
-
+    //iniciar partida
     useEffect(() => {
         if (!socket || !isConnected || !idLogged) return;
 
@@ -138,8 +137,7 @@ export default function pagina() {
             socket.off("recibir_disparo", handleRecibirDisparo);
         };
     }, [socket, isConnected, idLogged]);
-
-
+    
     useEffect(() => {
         if (!socket || !isConnected || !idLogged) return;
         socket.on("recibir_listo", data => {
@@ -149,7 +147,7 @@ export default function pagina() {
         }
         )
     }, [socket, isConnected, idLogged])
-
+    //turnos
     useEffect(() => {
         if (!socket || !isConnected || !idLogged) return;
 
@@ -173,7 +171,7 @@ export default function pagina() {
         })
 
     }, [socket, isConnected, idLogged, idPartida])
-
+    //casillas
     useEffect(() => {
         console.log(coordenadasSeleccionadas);
         console.log("primer casilla: ", primerCasilla);
@@ -252,7 +250,7 @@ export default function pagina() {
             console.log("Barco colocado en orientación:", orientacionDetectada);
         }
     }, [coordenadasSeleccionadas, selectedBarco, primerCasilla]);
-
+    //seleccionar barco
     useEffect(() => {
         for (let i = 0; i < barcosInfo.length; i++) {
             if (barcosInfo[i].id == selectedBarcoId) {
@@ -261,10 +259,11 @@ export default function pagina() {
         }
 
     }, [selectedBarcoId])
+    //probando
     function verCoordenadas() {
         console.log(coordenadasContrincante)
     }
-
+    //atacar
     async function obtenerCasillaEnemy(e) {
         if (partidaIniciada === false) {
             alert("Espera a que el otro jugador coloque sus barcos")
@@ -341,7 +340,7 @@ export default function pagina() {
             return mismaColumna && consecutivas;
         }
     }
-
+    //confirmar barcos colocados
     async function confirmar() {
         if (barcosColocados.length != 5) {
             alert("Poné los 5 barcos primero");
@@ -383,7 +382,7 @@ export default function pagina() {
             esListo: 3,
         })
     }
-
+    //mensajes encabezado
     let mensajeHeader = "Ubicá tus barcos, seleccionando un barco y luego las casillas";
     if (barcosColocados.length == 5 && !confirmado) {
         mensajeHeader = "No te olvides de apretar Confirmar";
@@ -396,6 +395,7 @@ export default function pagina() {
     } else {
         mensajeAtaca = "Turno Rival"
     }
+    //ver barcos hundidos
     function chequearDisparos() {
         if (Number(id1) === Number(idLogged)) {
             console.log("CHEQUEAR DISPARO JUGADOR 1")
@@ -461,8 +461,34 @@ export default function pagina() {
         }
 
     }
+    async function finalizarPartida(){
+        let info = {
+            id1: id1,
+            id2: id2,
+            id_partida: idPartida
+        }
+        try{
+            const response = await fetch(utr + "/terminarPartida",{
+                method:"PUT",
+                headers:{"Content-Type":"application/json"
+                },
+                body:JSON.stringify({info})
+            })
+            const data = await response.json();
 
-    useEffect(() => {
+            if(data.res){
+                alert("partida finalizada")
+            }
+        }catch{
+            console.log("error")
+            alert("error")
+        }
+    }
+    //terminar partida
+    useEffect(()=>{
+        finalizarPartida();
+    })
+    /*useEffect(() => {
         const finalizarPartida = async () => {
             if (!id1 || !id2 || !idPartida) return;
 
@@ -494,7 +520,7 @@ export default function pagina() {
             }
         };
         finalizarPartida();
-    }, [idPartida, id1, id2]);
+    }, [idPartida, id1, id2]);*/
 
     return (
         <>
