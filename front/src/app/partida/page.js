@@ -128,11 +128,13 @@ export default function pagina() {
                 }
             }
 
-            chequearDisparos()
+            
         };
 
         socket.on("recibir_disparo", handleRecibirDisparo);
         setDisparosRecibidos(prev => prev + 1)
+        chequearDisparos();
+        finalizarPartida();
         return () => {
             socket.off("recibir_disparo", handleRecibirDisparo);
         };
@@ -167,6 +169,8 @@ export default function pagina() {
 
                 setMiTurno(data.receptor)
                 console.log("Es mi turno")
+                chequearDisparos();
+                finalizarPartida();
             }
         })
 
@@ -468,26 +472,23 @@ export default function pagina() {
             id_partida: idPartida
         }
         try{
-            const response = await fetch(utr + "/terminarPartida",{
+            const response = await fetch(url + "/terminarPartida",{
                 method:"PUT",
                 headers:{"Content-Type":"application/json"
                 },
-                body:JSON.stringify({info})
+                body:JSON.stringify(info)
             })
             const data = await response.json();
 
             if(data.res){
                 alert("partida finalizada")
             }
-        }catch{
+        }catch(error){
             console.log("error")
             alert("error")
         }
     }
     //terminar partida
-    useEffect(()=>{
-        finalizarPartida();
-    })
     /*useEffect(() => {
         const finalizarPartida = async () => {
             if (!id1 || !id2 || !idPartida) return;

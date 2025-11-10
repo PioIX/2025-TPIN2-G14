@@ -13,7 +13,7 @@ var port = process.env.PORT || 4000;
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors({
-  origin: ["http://192.168.11.151:3000", "http://localhost:3000", "http://localhost:3002", "http://localhost:3003"],
+  origin: ["http://10.1.5.133:3000", "http://localhost:3000", "http://localhost:3002", "http://localhost:3003"],
   credentials: true
 }));
 
@@ -25,7 +25,7 @@ const server = app.listen(port, () => {
 
 const io = require('socket.io')(server, {
   cors: {
-    origin: ["http://192.168.11.151:3000", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
+    origin: ["http://10.1.5.133:3000", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
   }
@@ -403,6 +403,7 @@ app.post('/disparo', async function (req, res) {
 
 app.put('/terminarPartida', async function (req, res) {
   try {
+    console.log(req.body)
     const pedido = await realizarQuery(`SELECT * FROM Partidas WHERE id_partida = ${req.body.id_partida}`);
     for (let i = 0; i < pedido.length; i++) {
       if (pedido[i].barcos_hundidos_j1 == 5) {
@@ -411,7 +412,8 @@ app.put('/terminarPartida', async function (req, res) {
       } else if (pedido[i].barcos_hundidos_j2 == 5) {
         await realizarQuery(`UPDATE Partidas SET id_ganador = ${req.body.id1} WHERE id_partida = ${req.body.id_partida}`);
         return res.send({ res: true, message: "Partida finalizada correctamente." });
-      }
+      }else
+      return res.send({ res:false,message:"todavia no termino"})
     }
   } catch (error) {
     console.error("Error en /terminarPartida:", error);
