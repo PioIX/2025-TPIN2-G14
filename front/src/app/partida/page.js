@@ -8,7 +8,7 @@ import styles from "@/app/partida/page.module.css"
 import Button from "@/components/Boton";
 import { useConnection } from "../hooks/useConnection";
 
-const coordenadasUtilizadas = [] 
+const coordenadasUtilizadas = []
 const destructor1 = 2;
 const destructor2 = 2;
 const crucero = 3;
@@ -18,7 +18,7 @@ const coordDestructor1 = []
 const coordDestructor2 = []
 const coordCrucero = []
 const coordAcorazado = []
-const coordPortaAviones = [] 
+const coordPortaAviones = []
 const barcosInfo = [
     { nombre: 'destructor1', largo: 2, img: '/imagenes/destructorV.png', imgH: '/imagenes/destructorH.png', id: 0 },
     { nombre: 'destructor2', largo: 2, img: '/imagenes/destructorV.png', imgH: '/imagenes/destructorH.png', id: 1 },
@@ -57,7 +57,9 @@ export default function pagina() {
     const [disparosRecibidos, setDisparosRecibidos] = useState(0);
     const [barcosListos, setBarcosListos] = useState(1);
     const [barcosListosContrincante, setBarcosListosContricante] = useState(1);
+    const [partidaTerminada, setPartidaTerminada] = useState(1);
     let mensajeAtaca = "";
+
 
 
     function obtenerCasilla(e) {
@@ -66,7 +68,7 @@ export default function pagina() {
             setPrimerCasilla(id)
         }
         setCoordenadasSeleccionadas(prev => [...prev, id]);
-        setCasillasUsadas(prev => [...prev, id]); 
+        setCasillasUsadas(prev => [...prev, id]);
     }
     //orientacion
     function detectarOrientacion(casillas) {
@@ -128,18 +130,18 @@ export default function pagina() {
                 }
             }
 
-            
+
         };
 
         socket.on("recibir_disparo", handleRecibirDisparo);
         setDisparosRecibidos(prev => prev + 1)
         chequearDisparos();
-        finalizarPartida();
+        //finalizarPartida();
         return () => {
             socket.off("recibir_disparo", handleRecibirDisparo);
         };
     }, [socket, isConnected, idLogged]);
-    
+
     useEffect(() => {
         if (!socket || !isConnected || !idLogged) return;
         socket.on("recibir_listo", data => {
@@ -170,7 +172,7 @@ export default function pagina() {
                 setMiTurno(data.receptor)
                 console.log("Es mi turno")
                 chequearDisparos();
-                finalizarPartida();
+                //finalizarPartida();
             }
         })
 
@@ -271,7 +273,7 @@ export default function pagina() {
     async function obtenerCasillaEnemy(e) {
         if (partidaIniciada === false) {
             alert("Espera a que el otro jugador coloque sus barcos")
-            return; 
+            return;
 
         }
         if (Number(miTurno) !== Number(idLogged)) {
@@ -300,6 +302,7 @@ export default function pagina() {
             });
             if (response.res == true) {
                 console.log("disparado")
+                //finalizarPartida();
             }
         } catch (error) {
             console.error("Error en /agregarBarco:", error);
@@ -465,25 +468,28 @@ export default function pagina() {
         }
 
     }
-    async function finalizarPartida(){
+    //partida termina bien
+    async function finalizarPartida() {
         let info = {
             id1: id1,
             id2: id2,
             id_partida: idPartida
         }
-        try{
-            const response = await fetch(url + "/terminarPartida",{
-                method:"PUT",
-                headers:{"Content-Type":"application/json"
+        try {
+            const response = await fetch(url + "/terminarPartida", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
                 },
-                body:JSON.stringify(info)
+                body: JSON.stringify(info)
             })
             const data = await response.json();
 
-            if(data.res){
+            if (data.res) {
                 alert("partida finalizada")
+                setPartidaTerminada(2);
             }
-        }catch(error){
+        } catch (error) {
             console.log("error")
             alert("error")
         }
@@ -828,6 +834,20 @@ export default function pagina() {
                         </div>
                     </div>
                 </div>
+                {partidaTerminada == 2 ? (
+                    <>
+                        <PopUp>
+                            <div>Felicidades! Ganaste la partida!</div>
+                        </PopUp>
+                    </>
+                ) : partidaTerminada == 3 ? (
+                    <>
+                        <PopUp>
+                            <div>{idGanador} ganó la partida! Qué lástima! </div>
+                        </PopUp>
+                    </>
+
+                ):(null)}
             </section>
         </>
     )
