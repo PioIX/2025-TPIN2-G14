@@ -465,7 +465,19 @@ app.get('/traerBarcos', async function (req, res) {
   }
 });
 
+app.post('/traerCoordenadas', async function login(req, res) {
+  try {
+    console.log(req.body);
+    /**note termineeeeeeeeeeeee */
+    const comprobar = await realizarQuery(`SELECT * FROM  WHERE usuario = '${req.body.user}' AND contraseña = '${req.body.contraseña}'`);
 
+    console.log(comprobar);
+
+  } catch (error) {
+    console.error("Error en /traerCoordenadas:", error);
+    res.send({ res: false, message: "Error interno del servidor." });
+  }
+});
 
 let jugadoresEnLinea = [];
 

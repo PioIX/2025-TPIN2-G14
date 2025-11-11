@@ -354,7 +354,7 @@ export default function pagina() {
                     });
                 }
 
-                // ✅ AGREGAR a casillasUsadas SOLO cuando el barco se colocó correctamente
+                console.log("Barco colocado en las coordenadas:", coordenadasSeleccionadas);
                 setCasillasUsadas(prev => [...prev, ...coordenadasSeleccionadas]);
                 const coordsOrdenadas = [...coordenadasSeleccionadas].sort((a, b) => {
                     const letraA = a.charCodeAt(0);
@@ -442,7 +442,7 @@ export default function pagina() {
                 //finalizarPartida();
             }
         } catch (error) {
-            console.error("Error en /agregarBarco:", error);
+            console.error("Error en /disparo:", error);
             alert("Error al conectar con el servidor");
         }
         console.log("enviando barcos al contrincante");
@@ -509,13 +509,31 @@ export default function pagina() {
         };
 
         try {
-            const res = await fetch(url + "/agregarBarco", {
+            const response = await fetch(url + "/traerCoordenadas", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body),
             });
-            setConfirmado(true);
-            alert("Barcos guardados con éxito");
+            if (response.res == true){
+                setMisCoordenovich(response.coordenadas);
+                alert("Coordenadas traidas con éxito");
+            }
+        } catch (error) {
+            console.error("Error en /traerCoordenadas:", error);
+            alert("Error al conectar con el servidor");
+        }
+
+        try {
+            const response = await fetch(url + "/agregarBarco", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body),
+            });
+            if (response.res == true){
+                //llamar pedido de tarer todaslas coordenadas de la base de datos para queesten bien 
+                setConfirmado(true);
+                alert("Barcos guardados con éxito");
+            }
         } catch (error) {
             console.error("Error en /agregarBarco:", error);
             alert("Error al conectar con el servidor");
