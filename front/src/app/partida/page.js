@@ -68,7 +68,7 @@ export default function pagina() {
             setPrimerCasilla(id)
         }
         setCoordenadasSeleccionadas(prev => [...prev, id]);
-        setCasillasUsadas(prev => [...prev, id]);
+        //setCasillasUsadas(prev => [...prev, id]);
     }
     //orientacion
     function detectarOrientacion(casillas) {
@@ -115,19 +115,35 @@ export default function pagina() {
                     : `Fallaron en ${data.casilla} (agua)`;
                 alert(mensaje);
 
-                const btn = document.getElementById(data.casilla);
+                /*const btn = document.getElementById(data.casilla);
                 if (btn) {
                     btn.style.backgroundColor = data.impactado ? 'red' : 'blue';
                     btn.disabled = true;
+                }*/
+                const btn = document.getElementById(data.casilla);
+                if (btn) {
+                    const cell = btn.parentElement;
+                    cell.style.backgroundColor = data.impactado ? 'red' : 'blue';
+                    btn.disabled = true;
                 }
+
+
             }
 
             if (data.emisor == Number(idLogged)) {
-                const btnEnemy = document.querySelectorAll(`#${data.casilla}`)[1];
+                /*const btnEnemy = document.getElementById(`e-${data.casilla}`);
                 if (btnEnemy) {
                     btnEnemy.style.backgroundColor = data.impactado ? 'red' : 'blue';
                     btnEnemy.disabled = true;
+                }*/
+                const btnEnemy = document.getElementById(`e-${data.casilla}`);
+                if (btnEnemy) {
+                    const cellEnemy = btnEnemy.parentElement;
+                    cellEnemy.style.backgroundColor = data.impactado ? 'red' : 'blue';
+                    btnEnemy.disabled = true;
                 }
+
+
             }
 
 
@@ -136,7 +152,7 @@ export default function pagina() {
         socket.on("recibir_disparo", handleRecibirDisparo);
         setDisparosRecibidos(prev => prev + 1)
         chequearDisparos();
-        //finalizarPartida();
+        finalizarPartida();
         return () => {
             socket.off("recibir_disparo", handleRecibirDisparo);
         };
@@ -171,14 +187,14 @@ export default function pagina() {
 
                 setMiTurno(data.receptor)
                 console.log("Es mi turno")
-                chequearDisparos();
+                //chequearDisparos();
                 //finalizarPartida();
             }
         })
 
     }, [socket, isConnected, idLogged, idPartida])
     //casillas
-    useEffect(() => {
+    /*useEffect(() => {
         console.log(coordenadasSeleccionadas);
         console.log("primer casilla: ", primerCasilla);
         console.log("Barco: ", selectedBarco);
@@ -255,7 +271,119 @@ export default function pagina() {
 
             console.log("Barco colocado en orientación:", orientacionDetectada);
         }
+    }, [coordenadasSeleccionadas, selectedBarco, primerCasilla]);*/
+    useEffect(() => {
+        console.log(coordenadasSeleccionadas);
+        console.log("primer casilla: ", primerCasilla);
+        console.log("Barco: ", selectedBarco);
+
+        if (selectedBarco && coordenadasSeleccionadas.length === selectedBarco.largo) {
+            const orientacionDetectada = detectarOrientacion(coordenadasSeleccionadas);
+
+            if (selectedBarco && coordenadasSeleccionadas.length === selectedBarco.largo) {
+                const orientacionDetectada = detectarOrientacion(coordenadasSeleccionadas);
+
+                if (!orientacionDetectada) {
+                    alert("Las casillas deben ser contiguas en línea recta (horizontal o vertical)");
+                    // ✅ LIMPIAR estado visual de los botones seleccionados incorrectamente
+                    coordenadasSeleccionadas.forEach(coord => {
+                        const btn = document.getElementById(coord);
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.style.backgroundColor = '';
+                        }
+                    });
+                    setCoordenadasSeleccionadas([]);
+                    setPrimerCasilla(null);
+                    return;
+                }
+
+                const sonContiguas = validarCasillasContiguas(coordenadasSeleccionadas, orientacionDetectada);
+
+                if (!sonContiguas) {
+                    alert("Las casillas deben ser consecutivas sin espacios");
+                    // ✅ LIMPIAR estado visual de los botones seleccionados incorrectamente
+                    coordenadasSeleccionadas.forEach(coord => {
+                        const btn = document.getElementById(coord);
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.style.backgroundColor = '';
+                        }
+                    });
+                    setCoordenadasSeleccionadas([]);
+                    setPrimerCasilla(null);
+                    return;
+                }
+
+                const primerBoton = document.getElementById(primerCasilla);
+                if (primerBoton) {
+                    const primerCasillero = primerBoton.parentElement;
+
+                    const imgContainer = document.createElement('div');
+                    imgContainer.style.position = 'absolute';
+                    imgContainer.style.top = '0';
+                    imgContainer.style.left = '0';
+                    imgContainer.style.zIndex = '10';
+                    imgContainer.style.pointerEvents = 'none';
+
+                    if (orientacionDetectada === 'horizontal') {
+                        imgContainer.style.width = `calc(${selectedBarco.largo} * 100%)`;
+                        imgContainer.style.height = '100%';
+                    } else {
+                        imgContainer.style.width = '100%';
+                        imgContainer.style.height = `calc(${selectedBarco.largo} * 100%)`;
+                    }
+
+                    const img = document.createElement('img');
+                    img.src = orientacionDetectada === 'horizontal' ? selectedBarco.imgH : selectedBarco.img;
+                    img.alt = selectedBarco.nombre;
+                    img.style.width = '100%';
+                    img.style.height = '100%';
+                    img.style.objectFit = 'fill';
+
+                    imgContainer.appendChild(img);
+
+                    primerCasillero.style.position = 'relative';
+                    primerCasillero.appendChild(imgContainer);
+
+                    coordenadasSeleccionadas.forEach(coord => {
+                        const btn = document.getElementById(coord);
+                        if (btn) {
+                            btn.disabled = true;
+                            btn.style.backgroundColor = 'rgba(0, 100, 200, 0.2)';
+                        }
+                    });
+                }
+
+                // ✅ AGREGAR a casillasUsadas SOLO cuando el barco se colocó correctamente
+                setCasillasUsadas(prev => [...prev, ...coordenadasSeleccionadas]);
+                const coordsOrdenadas = [...coordenadasSeleccionadas].sort((a, b) => {
+                    const letraA = a.charCodeAt(0);
+                    const letraB = b.charCodeAt(0);
+                    const numA = parseInt(a.slice(1));
+                    const numB = parseInt(b.slice(1));
+
+                    return letraA - letraB || numA - numB;
+                });
+
+                setBarcosColocados(prev => [...prev, {
+                    barco: selectedBarco,
+                    coordenadas: coordsOrdenadas, // solo esta
+                    primeraCasilla: primerCasilla,
+                    orientacion: orientacionDetectada
+                }]);
+
+
+                setCoordenadasSeleccionadas([]);
+                setPrimerCasilla(null);
+                setSelectedBarco(null);
+                setSelectedBarcoId(null);
+
+                console.log("Barco colocado en orientación:", orientacionDetectada);
+            }
+        }
     }, [coordenadasSeleccionadas, selectedBarco, primerCasilla]);
+
     //seleccionar barco
     useEffect(() => {
         for (let i = 0; i < barcosInfo.length; i++) {
@@ -280,18 +408,28 @@ export default function pagina() {
             alert("No es tu turno perrito paciencia")
             return;
         }
-        const id = e.target.id;
+        /*const id = e.target.id;
         setSelectedCasillaEnemy(id);
         socket.emit("enviar_disparo", {
             room: idPartida,
             emisor: idLogged,
             receptor: esJugador1 ? id2 : id1,
             casilla: id
-        })
+        })*/
+        //probando
+        const id = e.target.id;    // ahora id = e-A1
+        // pero enviás solo la coordenada real
+        socket.emit("enviar_disparo", {
+            room: idPartida,
+            emisor: idLogged,
+            receptor: esJugador1 ? id2 : id1,
+            casilla: id.replace("e-", "")
+        });
+        let idBD = id.replace("e-", "")
         console.log(id, " enemigo");
         const data = {
             id_partida: idPartida,
-            coordenada: id,
+            coordenada: idBD,
             id_jugador: idLogged,
         }
         try {
@@ -360,8 +498,15 @@ export default function pagina() {
             barcos: barcosColocados.map(barco => ({
                 longitud: barco.barco.largo,
                 impactos: 0,
-                coordenadas: barco.coordenadas
+                coordenadas: barco.coordenadas.sort((a, b) => {
+                    const letraA = a.charCodeAt(0);
+                    const letraB = b.charCodeAt(0);
+                    const numA = parseInt(a.slice(1));
+                    const numB = parseInt(b.slice(1));
+                    return letraA - letraB || numA - numB;
+                })
             }))
+
         };
 
         try {
@@ -403,7 +548,8 @@ export default function pagina() {
         mensajeAtaca = "Turno Rival"
     }
     //ver barcos hundidos
-    function chequearDisparos() {
+    function chequearDisparos(texto) {
+        console.log(texto)
         if (Number(id1) === Number(idLogged)) {
             console.log("CHEQUEAR DISPARO JUGADOR 1")
 
@@ -711,128 +857,138 @@ export default function pagina() {
                         }
 
                     </div>
-                    <div className={styles.tablero}>
+                    <div className={styles.tablero} id="tablero-enemigo">
                         <div className={styles.fila}>
-                            <div className={styles.casillero}><button id="A1" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="A2" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="A3" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="A4" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="A5" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="A6" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="A7" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="A8" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="A9" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="A10" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-A1" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-A2" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-A3" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-A4" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-A5" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-A6" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-A7" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-A8" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-A9" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-A10" onClick={obtenerCasillaEnemy}></button></div>
                         </div>
+
                         <div className={styles.fila}>
-                            <div className={styles.casillero}><button id="B1" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="B2" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="B3" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="B4" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="B5" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="B6" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="B7" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="B8" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="B9" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="B10" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-B1" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-B2" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-B3" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-B4" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-B5" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-B6" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-B7" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-B8" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-B9" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-B10" onClick={obtenerCasillaEnemy}></button></div>
                         </div>
+
                         <div className={styles.fila}>
-                            <div className={styles.casillero}><button id="C1" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="C2" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="C3" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="C4" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="C5" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="C6" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="C7" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="C8" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="C9" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="C10" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-C1" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-C2" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-C3" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-C4" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-C5" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-C6" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-C7" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-C8" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-C9" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-C10" onClick={obtenerCasillaEnemy}></button></div>
                         </div>
+
                         <div className={styles.fila}>
-                            <div className={styles.casillero}><button id="D1" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="D2" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="D3" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="D4" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="D5" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="D6" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="D7" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="D8" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="D9" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="D10" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-D1" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-D2" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-D3" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-D4" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-D5" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-D6" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-D7" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-D8" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-D9" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-D10" onClick={obtenerCasillaEnemy}></button></div>
                         </div>
+
                         <div className={styles.fila}>
-                            <div className={styles.casillero}><button id="E1" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="E2" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="E3" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="E4" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="E5" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="E6" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="E7" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="E8" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="E9" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="E10" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-E1" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-E2" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-E3" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-E4" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-E5" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-E6" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-E7" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-E8" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-E9" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-E10" onClick={obtenerCasillaEnemy}></button></div>
                         </div>
+
                         <div className={styles.fila}>
-                            <div className={styles.casillero}><button id="F1" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="F2" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="F3" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="F4" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="F5" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="F6" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="F7" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="F8" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="F9" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="F10" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-F1" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-F2" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-F3" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-F4" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-F5" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-F6" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-F7" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-F8" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-F9" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-F10" onClick={obtenerCasillaEnemy}></button></div>
                         </div>
+
                         <div className={styles.fila}>
-                            <div className={styles.casillero}><button id="G1" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="G2" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="G3" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="G4" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="G5" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="G6" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="G7" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="G8" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="G9" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="G10" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-G1" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-G2" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-G3" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-G4" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-G5" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-G6" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-G7" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-G8" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-G9" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-G10" onClick={obtenerCasillaEnemy}></button></div>
                         </div>
+
                         <div className={styles.fila}>
-                            <div className={styles.casillero}><button id="H1" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="H2" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="H3" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="H4" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="H5" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="H6" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="H7" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="H8" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="H9" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="H10" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-H1" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-H2" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-H3" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-H4" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-H5" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-H6" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-H7" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-H8" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-H9" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-H10" onClick={obtenerCasillaEnemy}></button></div>
                         </div>
+
                         <div className={styles.fila}>
-                            <div className={styles.casillero}><button id="I1" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="I2" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="I3" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="I4" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="I5" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="I6" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="I7" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="I8" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="I9" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="I10" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-I1" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-I2" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-I3" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-I4" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-I5" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-I6" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-I7" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-I8" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-I9" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-I10" onClick={obtenerCasillaEnemy}></button></div>
                         </div>
+
                         <div className={styles.fila}>
-                            <div className={styles.casillero}><button id="J1" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="J2" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="J3" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="J4" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="J5" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="J6" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="J7" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="J8" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="J9" onClick={obtenerCasillaEnemy}></button></div>
-                            <div className={styles.casillero}><button id="J10" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-J1" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-J2" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-J3" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-J4" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-J5" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-J6" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-J7" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-J8" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-J9" onClick={obtenerCasillaEnemy}></button></div>
+                            <div className={styles.casillero}><button id="e-J10" onClick={obtenerCasillaEnemy}></button></div>
                         </div>
                     </div>
+
                 </div>
                 {partidaTerminada == 2 ? (
                     <>
@@ -847,7 +1003,7 @@ export default function pagina() {
                         </PopUp>
                     </>
 
-                ):(null)}
+                ) : (null)}
             </section>
         </>
     )
