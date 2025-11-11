@@ -54,7 +54,6 @@ export default function pagina() {
     const primerTurno = Number(idLogged) === Number(id1);
     const [casillasUsadas, setCasillasUsadas] = useState([]);
     const [partidaIniciada, setPartidaIniciada] = useState(false);
-    const [disparosRecibidos, setDisparosRecibidos] = useState(0);
     const [barcosListos, setBarcosListos] = useState(1);
     const [barcosListosContrincante, setBarcosListosContricante] = useState(1);
     const [partidaTerminada, setPartidaTerminada] = useState(1);
@@ -106,9 +105,11 @@ export default function pagina() {
     useEffect(() => {
         if (!socket || !isConnected || !idLogged) return;
 
-        const handleRecibirDisparo = (data) => {
+        const handleRecibirDisparo = async (data) => {
             console.log("📨 Disparo recibido:", data);
 
+            await chequearDisparos();
+            await finalizarPartida();
             if (data.receptor == Number(idLogged)) {
                 const mensaje = data.impactado
                     ? `¡Te impactaron en ${data.casilla}!`
@@ -150,9 +151,7 @@ export default function pagina() {
         };
 
         socket.on("recibir_disparo", handleRecibirDisparo);
-        setDisparosRecibidos(prev => prev + 1)
-        chequearDisparos();
-        finalizarPartida();
+
         return () => {
             socket.off("recibir_disparo", handleRecibirDisparo);
         };
@@ -187,8 +186,8 @@ export default function pagina() {
 
                 setMiTurno(data.receptor)
                 console.log("Es mi turno")
-                //chequearDisparos();
-                //finalizarPartida();
+                chequearDisparos();
+                finalizarPartida();
             }
         })
 
@@ -522,6 +521,7 @@ export default function pagina() {
             alert("Error al conectar con el servidor");
         }
         console.log("enviando barcos al contrincante");
+        console.log(casillasUsadas)
         socket.emit("enviar_barcos", {
             room: idPartida,
             jugador: idLogged,
@@ -548,7 +548,7 @@ export default function pagina() {
         mensajeAtaca = "Turno Rival"
     }
     //ver barcos hundidos
-    function chequearDisparos(texto) {
+    async function chequearDisparos(texto) {
         console.log(texto)
         if (Number(id1) === Number(idLogged)) {
             console.log("CHEQUEAR DISPARO JUGADOR 1")
