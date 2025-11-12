@@ -512,11 +512,21 @@ export default function pagina() {
             const response = await fetch(url + "/traerCoordenadas", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body),
+                body: JSON.stringify({
+                    id_partida: idPartida,
+                    id_jugador: idLogged
+                }),
             });
-            if (response.res == true){
-                setMisCoordenovich(response.coordenadas);
-                alert("Coordenadas traidas con éxito");
+
+            const data = await response.json();
+            console.log(data)
+
+            if (data.res === true) {
+                console.log(data.coordenadas)
+                setMisCoordenovich(data.coordenadas);
+                alert("Coordenadas traídas con éxito");
+            } else {
+                alert("No se pudieron traer las coordenadas");
             }
         } catch (error) {
             console.error("Error en /traerCoordenadas:", error);
@@ -529,7 +539,7 @@ export default function pagina() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body),
             });
-            if (response.res == true){
+            if (response.res == true) {
                 //llamar pedido de tarer todaslas coordenadas de la base de datos para queesten bien 
                 setConfirmado(true);
                 alert("Barcos guardados con éxito");

@@ -465,17 +465,21 @@ app.get('/traerBarcos', async function (req, res) {
   }
 });
 
-app.post('/traerCoordenadas', async function login(req, res) {
+app.post('/traerCoordenadas', async function (req, res) {
   try {
-    console.log(req.body);
-    /**note termineeeeeeeeeeeee */
-    const comprobar = await realizarQuery(`SELECT * FROM  WHERE usuario = '${req.body.user}' AND contraseña = '${req.body.contraseña}'`);
+    const coordenadas = await realizarQuery(`
+      SELECT Coordenadas.coordenada_barco AS coordenada, Coordenadas.impacto, Coordenadas.id_barco, Barcos.longitud
+      FROM Coordenadas
+      INNER JOIN Barcos ON Coordenadas.id_barco = Barcos.id_barco
+      INNER JOIN JugadoresPorPartida ON JugadoresPorPartida.id_jugador = Barcos.id_jugador
+      WHERE Coordenadas.id_partida = ${req.body.id_partida} AND JugadoresPorPartida.id_jugador = ${req.body.id_jugador}
+      ORDER BY Barcos.id_barco, Coordenadas.coordenada_barco
+    `);
 
-    console.log(comprobar);
-
+    res.send({ res: true, coordenadas });
   } catch (error) {
     console.error("Error en /traerCoordenadas:", error);
-    res.send({ res: false, message: "Error interno del servidor." });
+    res.send({ res: false, message: "Error obteniendo las coordenadas del jugador." });
   }
 });
 
