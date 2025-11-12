@@ -13,7 +13,7 @@ var port = process.env.PORT || 4000;
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors({
-  origin: ["http://192.168.11.151:3000","http://10.1.5.133:3000","http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3002", "http://localhost:3003"],
+  origin: ["http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3002", "http://localhost:3003"],
   credentials: true
 }));
 
@@ -25,7 +25,7 @@ const server = app.listen(port, () => {
 
 const io = require('socket.io')(server, {
   cors: {
-    origin: ["http://192.168.11.151:3000","http://10.1.5.133:3000","http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
+    origin: ["http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
   }
@@ -351,14 +351,14 @@ app.get('/traerPuntajes', async (req, res) => {
       ORDER BY partidas_ganadas DESC
       LIMIT 10;`)
     console.log(respuesta.length)
-    if(respuesta.length == 0 ){
-      return res.send({res: false, message: "error"});
-    }else{
-      return res.send({res: true, message: respuesta});
+    if (respuesta.length == 0) {
+      return res.send({ res: false, message: "error" });
+    } else {
+      return res.send({ res: true, message: respuesta });
     }
   } catch {
     console.log("error en traer puntajes");
-    return res.send({res:false, msj: "error"});
+    return res.send({ res: false, msj: "error" });
   }
 })
 app.post('/disparo', async function (req, res) {
@@ -412,8 +412,10 @@ app.put('/terminarPartida', async function (req, res) {
       } else if (pedido[i].barcos_hundidos_j2 == 5) {
         await realizarQuery(`UPDATE Partidas SET id_ganador = ${req.body.id1} WHERE id_partida = ${req.body.id_partida}`);
         return res.send({ res: true, message: "Partida finalizada correctamente." });
-      }else
-      return res.send({ res:false,message:"todavia no termino"})
+      } else {
+        return res.send({ res: false, message: "todavia no termino" })
+      }
+
     }
   } catch (error) {
     console.error("Error en /terminarPartida:", error);
@@ -465,7 +467,7 @@ app.get('/traerBarcos', async function (req, res) {
   }
 });
 
-app.post('/traerCoordenadas', async function (req, res) {
+/*app.post('/traerCoordenadas', async function (req, res) {
   try {
     const coordenadas = await realizarQuery(`
       SELECT Coordenadas.coordenada_barco AS coordenada, Coordenadas.impacto, Coordenadas.id_barco, Barcos.longitud
@@ -475,14 +477,28 @@ app.post('/traerCoordenadas', async function (req, res) {
       WHERE Coordenadas.id_partida = ${req.body.id_partida} AND JugadoresPorPartida.id_jugador = ${req.body.id_jugador}
       ORDER BY Barcos.id_barco, Coordenadas.coordenada_barco
     `);
-
-    res.send({ res: true, coordenadas });
+    res.send({ res: true, coords: coordenadas });
+  } catch (error) {
+    console.error("Error en /traerCoordenadas:", error);
+    res.send({ res: false, message: "Error obteniendo las coordenadas del jugador." });
+  }
+});*/
+app.post('/traerCoordenadas', async function (req, res) {
+  try {
+    const coordenadas = await realizarQuery(`
+      SELECT Coordenadas.coordenada_barco AS coordenada, Coordenadas.impacto, Coordenadas.id_barco, Barcos.longitud
+      FROM Coordenadas
+      INNER JOIN Barcos ON Coordenadas.id_barco = Barcos.id_barco
+      WHERE Coordenadas.id_partida = ${req.body.id_partida} 
+      AND Barcos.id_jugador = ${req.body.id_jugador}
+      ORDER BY Barcos.id_barco, Coordenadas.coordenada_barco
+    `);
+    res.send({ res: true, coords: coordenadas });
   } catch (error) {
     console.error("Error en /traerCoordenadas:", error);
     res.send({ res: false, message: "Error obteniendo las coordenadas del jugador." });
   }
 });
-
 let jugadoresEnLinea = [];
 
 const maxPlayers = 3;

@@ -57,6 +57,7 @@ export default function pagina() {
     const [barcosListos, setBarcosListos] = useState(1);
     const [barcosListosContrincante, setBarcosListosContricante] = useState(1);
     const [partidaTerminada, setPartidaTerminada] = useState(1);
+    const [misCoordenovich, setMisCoordenovich] = useState([]);
     let mensajeAtaca = "";
 
 
@@ -485,12 +486,14 @@ export default function pagina() {
         }
     }
     //confirmar barcos colocados
+    // Modificar la función coords para que retorne las coordenadas
     async function confirmar() {
         if (barcosColocados.length != 5) {
             alert("Poné los 5 barcos primero");
             return;
         }
         setBarcosListos(2);
+
         const body = {
             id_partida: idPartida,
             id_jugador: idLogged,
@@ -505,62 +508,63 @@ export default function pagina() {
                     return letraA - letraB || numA - numB;
                 })
             }))
-
         };
 
         try {
-            const response = await fetch(url + "/traerCoordenadas", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    id_partida: idPartida,
-                    id_jugador: idLogged
-                }),
-            });
-
-            const data = await response.json();
-            console.log(data)
-
-            if (data.res === true) {
-                console.log(data.coordenadas)
-                setMisCoordenovich(data.coordenadas);
-                alert("Coordenadas traídas con éxito");
-            } else {
-                alert("No se pudieron traer las coordenadas");
-            }
-        } catch (error) {
-            console.error("Error en /traerCoordenadas:", error);
-            alert("Error al conectar con el servidor");
-        }
-
-        try {
+            // 1. Guardar barcos en BD
             const response = await fetch(url + "/agregarBarco", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body),
             });
-            if (response.res == true) {
-                //llamar pedido de tarer todaslas coordenadas de la base de datos para queesten bien 
-                setConfirmado(true);
-                alert("Barcos guardados con éxito");
+            const data = await response.json();
+
+            if (data.res == true) {
+                // 2. Obtener las coordenadas desde la BD
+                const coordsResponse = await fetch(url + "/traerCoordenadas", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        id_partida: idPartida,
+                        id_jugador: idLogged
+                    }),
+                });
+
+                const coordsData = await coordsResponse.json();
+
+                if (coordsData.res) {
+                    const coordenadas = coordsData.coords;
+
+                    // 3. Actualizar el estado
+                    setMisCoordenovich(coordenadas);
+
+                    // 4. Usar el valor directamente en socket (no el estado)
+                    console.log("enviando barcos al contrincante");
+                    console.log("Coordenadas a enviar:", coordenadas);
+
+                    socket.emit("enviar_barcos", {
+                        room: idPartida,
+                        jugador: idLogged,
+                        casillas: coordenadas.map(c => c.coordenada), // Extraer solo las coordenadas
+                        barcos: barcosColocados
+                    });
+
+                    socket.emit("barcos_listos", {
+                        room: idPartida,
+                        jugadorId: idLogged,
+                        esListo: 3,
+                    });
+
+                    setConfirmado(true);
+                    alert("Barcos guardados con éxito");
+                } else {
+                    alert("Error al obtener las coordenadas");
+                }
             }
         } catch (error) {
-            console.error("Error en /agregarBarco:", error);
+            console.error("Error en confirmar:", error);
             alert("Error al conectar con el servidor");
         }
-        console.log("enviando barcos al contrincante");
-        console.log(casillasUsadas)
-        socket.emit("enviar_barcos", {
-            room: idPartida,
-            jugador: idLogged,
-            casillas: casillasUsadas,
-            barcos: barcosColocados
-        });
-        socket.emit("barcos_listos", {
-            room: idPartida,
-            jugadorId: idLogged,
-            esListo: 3,
-        })
     }
     //mensajes encabezado
     let mensajeHeader = "Ubicá tus barcos, seleccionando un barco y luego las casillas";
@@ -574,6 +578,37 @@ export default function pagina() {
         mensajeAtaca = "¡Tu turno!"
     } else {
         mensajeAtaca = "Turno Rival"
+    }
+    async function coords() {
+        try {
+            const response = await fetch(url + "/traerCoordenadas", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id_partida: idPartida,
+                    id_jugador: idLogged
+                }),
+            });
+
+            const data = await response.json();
+            console.log(data)
+
+            if (data.res) {
+
+                console.log(data.coordenadas)
+                console.log(data.coords.length)
+                data.coords.map((coord) => {
+                    setMisCoordenovich(prev => [...prev, coord.coordenada]);
+                })
+                console.log("mis coordenovich: ", misCoordenovich)
+                alert("Coordenadas traídas con éxito");
+            } else {
+                alert("No se pudieron traer las coordenadas");
+            }
+        } catch (error) {
+            console.error("Error en /traerCoordenadas:", error);
+            alert("Error al conectar con el servidor");
+        }
     }
     //ver barcos hundidos
     async function chequearDisparos(texto) {
@@ -672,13 +707,13 @@ export default function pagina() {
     /*useEffect(() => {
         const finalizarPartida = async () => {
             if (!id1 || !id2 || !idPartida) return;
-
+    
             const datos = {
                 id_partida: idPartida,
                 id1: id1,
                 id2: id2
             };
-
+    
             try {
                 const response = await fetch(url + "/terminarPartida", {
                     method: "PUT",
@@ -687,9 +722,9 @@ export default function pagina() {
                     },
                     body: JSON.stringify(datos)
                 });
-
+    
                 const data = await response.json();
-
+    
                 if (data.res) {
                     alert("La partida ha terminado correctamente.");
                 } else {
@@ -1016,7 +1051,7 @@ export default function pagina() {
                             <div className={styles.casillero}><button id="e-J10" onClick={obtenerCasillaEnemy}></button></div>
                         </div>
                     </div>
-
+                    <button onClick={coords}>probando</button>
                 </div>
                 {partidaTerminada == 2 ? (
                     <>
