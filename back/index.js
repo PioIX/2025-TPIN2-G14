@@ -13,7 +13,7 @@ var port = process.env.PORT || 4000;
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors({
-  origin: ["http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3002", "http://localhost:3003"],
+  origin: ["http://10.1.4.151:3000","http://10.1.4.151:3001","http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3002", "http://localhost:3003"],
   credentials: true
 }));
 
@@ -25,7 +25,7 @@ const server = app.listen(port, () => {
 
 const io = require('socket.io')(server, {
   cors: {
-    origin: ["http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
+    origin: ["http://10.1.4.151:3000","http://10.1.4.151:3001","http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
   }
@@ -583,10 +583,10 @@ io.on("connection", (socket) => {
     let disparo = false;
 
     // Buscar al jugador receptor en la partida
-    const jugadorReceptor = jugadoresEnPartida.find(j =>
-      j.id == data.receptor
+    let jugadorReceptor = jugadoresEnPartida.find(j =>
+      j.id == data.receptor && j.room == data.room
     );
-
+    console.log("Jugador Receptor: ", jugadorReceptor)
     if (!jugadorReceptor) {
       console.error("❌ No se encontró al jugador receptor:", data.receptor);
       console.log("📋 Jugadores en partida:", jugadoresEnPartida);
@@ -629,14 +629,18 @@ io.on("connection", (socket) => {
     players++;
     console.log("casillas : ", data.casillas, " de: ", data.jugador)
 
-    if (players < maxPlayers) {
-      jugadoresEnPartida.push({
-        id: data.jugador,
-        casillas: data.casillas,
-        barcos: data.barcos
-      })
-    }
-    if (jugadoresEnPartida.length == 2) {
+    
+    jugadoresEnPartida.push({
+      id: data.jugador,
+      casillas: data.casillas,
+      barcos: data.barcos,
+      room: data.room
+    })
+    /*let jugadorEnRoom = jugadoresEnPartida.find(j =>
+      j.room == data.room
+    );
+    console.log({jugadorEnRoom}) */
+    if (jugadorEnRoom.length == 2) {
       io.to(data.room).emit("partida_iniciada", {
         partidaIniciada: true,
         idPartida: data.room
