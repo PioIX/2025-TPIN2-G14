@@ -13,7 +13,7 @@ var port = process.env.PORT || 4000;
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors({
-  origin: ["http://10.1.5.147:3000", "http://localhost:3000", "http://localhost:3002", "http://localhost:3003"],
+  origin: ["http://192.168.56.1:3000", "http://192.168.56.1:3001", "http://localhost:3000", "http://localhost:3002", "http://localhost:3003"],
   credentials: true
 }));
 
@@ -25,7 +25,7 @@ const server = app.listen(port, () => {
 
 const io = require('socket.io')(server, {
   cors: {
-    origin: ["http://10.1.5.147:3000", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
+    origin: ["http://192.168.56.1:3000", "http://192.168.56.1:3001", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
   }
@@ -351,14 +351,14 @@ app.get('/traerPuntajes', async (req, res) => {
       ORDER BY partidas_ganadas DESC
       LIMIT 10;`)
     console.log(respuesta.length)
-    if(respuesta.length == 0 ){
-      return res.send({res: false, message: "error"});
-    }else{
-      return res.send({res: true, message: respuesta});
+    if (respuesta.length == 0) {
+      return res.send({ res: false, message: "error" });
+    } else {
+      return res.send({ res: true, message: respuesta });
     }
   } catch {
     console.log("error en traer puntajes");
-    return res.send({res:false, msj: "error"});
+    return res.send({ res: false, msj: "error" });
   }
 })
 app.post('/disparo', async function (req, res) {
@@ -411,6 +411,8 @@ app.put('/terminarPartida', async function (req, res) {
       } else if (pedido[i].barcos_hundidos_j2 == 5) {
         await realizarQuery(`UPDATE Partidas SET id_ganador = ${req.body.id1} WHERE id_partida = ${req.body.id_partida}`);
         return res.send({ res: true, message: "Partida finalizada correctamente." });
+      } else {
+        return res.send({ res:false,message:"todavia no termina"})
       }
     }
   } catch (error) {
@@ -543,6 +545,16 @@ io.on("connection", (socket) => {
     })
 
   })
+
+  socket.on("seleccionar_dificultad", async data => {
+    console.log("Dificultad seleccionada:", data.dificultad, "por jugador:", data.jugador);
+
+    socket.to(data.room).emit("recibir_dificultad", {
+      dificultad: data.dificultad,
+      jugadorQueSelecciono: data.jugador
+    });
+  });
+
   socket.on("enviar_disparo", async data => {
     console.log("🎯 Disparo recibido desde:", data.emisor, "a jugador:", data.receptor, "a la casilla:", data.casilla);
 

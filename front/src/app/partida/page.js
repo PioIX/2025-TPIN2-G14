@@ -8,7 +8,6 @@ import styles from "@/app/partida/page.module.css"
 import Button from "@/components/Boton";
 import { useConnection } from "../hooks/useConnection";
 
-// Configuraciones de barcos según dificultad
 const configuracionesBarcos = {
     normal: [
         { nombre: 'destructor1', largo: 2, img: '/imagenes/destructorV.png', imgH: '/imagenes/destructorH.png', id: 0 },
@@ -20,7 +19,7 @@ const configuracionesBarcos = {
     intermedio: [
         { nombre: 'crucero', largo: 3, img: '/imagenes/cruceroV.png', imgH: '/imagenes/cruceroH.png', id: 0 },
         { nombre: 'acorazado', largo: 4, img: '/imagenes/acorazadoV.png', imgH: '/imagenes/acorazadoH.png', id: 1 },
-        { nombre: 'portaAviones', largo: 5, img: '/imagenes/portaAvionesV.png', imgH: '/imagenes/portaAvionesH.png', id: 2}
+        { nombre: 'portaAviones', largo: 5, img: '/imagenes/portaAvionesV.png', imgH: '/imagenes/portaAvionesH.png', id: 2 }
     ],
     avanzado: [
         { nombre: 'destructor1', largo: 2, img: '/imagenes/destructorV.png', imgH: '/imagenes/destructorH.png', id: 0 },
@@ -40,12 +39,11 @@ export default function pagina() {
     const img2 = searchParams.get("img2");
     const idPartida = searchParams.get("idPartida");
     const idLogged = searchParams.get("idLogged");
-    
-    // Estado para la dificultad
-    const [dificultad, setDificultad] = useState('normal'); // 'normal', 'intermedio', 'avanzado'
+
+    const [dificultad, setDificultad] = useState('normal');
     const [barcosInfo, setBarcosInfo] = useState(configuracionesBarcos.normal);
     const [mostrarSelectorDificultad, setMostrarSelectorDificultad] = useState(true);
-    
+
     const [selectedCasilla, setSelectedCasilla] = useState("");
     const [selectedCasillaEnemy, setSelectedCasillaEnemy] = useState("");
     const [selectedBarco, setSelectedBarco] = useState(null);
@@ -64,15 +62,13 @@ export default function pagina() {
     const [disparosRecibidos, setDisparosRecibidos] = useState(0);
     const [barcosListos, setBarcosListos] = useState(1);
     const [barcosListosContrincante, setBarcosListosContricante] = useState(1);
-    
+
     let mensajeAtaca = "";
 
-    // Función para seleccionar dificultad
     const seleccionarDificultad = (nivel) => {
         setDificultad(nivel);
         setBarcosInfo(configuracionesBarcos[nivel]);
         setMostrarSelectorDificultad(false);
-        // Emitir al socket la dificultad seleccionada
         if (socket && isConnected) {
             socket.emit("seleccionar_dificultad", {
                 room: idPartida,
@@ -88,7 +84,7 @@ export default function pagina() {
             setPrimerCasilla(id)
         }
         setCoordenadasSeleccionadas(prev => [...prev, id]);
-        setCasillasUsadas(prev => [...prev, id]); 
+        setCasillasUsadas(prev => [...prev, id]);
     }
 
     function detectarOrientacion(casillas) {
@@ -123,7 +119,22 @@ export default function pagina() {
             socket.off("partida_iniciada", handlePartidaIniciada);
         };
     }, [socket, isConnected, idLogged, idPartida])
-    
+
+    useEffect(() => {
+        if (!socket || !isConnected || !idLogged) return;
+
+        socket.on("recibir_dificultad", data => {
+            console.log("Dificultad recibida del otro jugador:", data.dificultad);
+            setDificultad(data.dificultad);
+            setBarcosInfo(configuracionesBarcos[data.dificultad]);
+            setMostrarSelectorDificultad(false);
+        });
+
+        return () => {
+            socket.off("recibir_dificultad");
+        };
+    }, [socket, isConnected, idLogged]);
+
     useEffect(() => {
         if (!socket || !isConnected || !idLogged) return;
 
@@ -178,7 +189,7 @@ export default function pagina() {
             room: idPartida,
             userId: Number(idLogged)
         });
-        
+
         socket.on("aceptar_turno", data => {
             if (data.receptor == Number(idLogged)) {
                 setMiTurno(data.receptor)
@@ -278,7 +289,7 @@ export default function pagina() {
     async function obtenerCasillaEnemy(e) {
         if (partidaIniciada === false) {
             alert("Espera a que el otro jugador coloque sus barcos")
-            return; 
+            return;
         }
         if (Number(miTurno) !== Number(idLogged)) {
             alert("No es tu turno perrito paciencia")
@@ -325,7 +336,7 @@ export default function pagina() {
             console.log("🔄 Turno cambiado a:", nuevoTurno);
         }, 500);
     }
-    
+
     function validarCasillasContiguas(casillas, orientacion) {
         if (casillas.length <= 1) return true;
 
@@ -405,7 +416,7 @@ export default function pagina() {
     } else {
         mensajeAtaca = "Turno Rival"
     }
-    
+
     function chequearDisparos() {
         if (Number(id1) === Number(idLogged)) {
             console.log("CHEQUEAR DISPARO JUGADOR 1")
@@ -500,27 +511,26 @@ export default function pagina() {
         finalizarPartida();
     }, [idPartida, id1, id2]);
 
-    // Selector de dificultad (se muestra antes de empezar)
     if (mostrarSelectorDificultad) {
         return (
             <div className={styles.selectorDificultad}>
                 <h1>Selecciona el nivel de dificultad</h1>
                 <div className={styles.opcionesDificultad}>
-                    <button 
+                    <button
                         onClick={() => seleccionarDificultad('normal')}
                         className={styles.botonDificultad}
                     >
                         <h2>Normal</h2>
                         <p>5 barcos: 2 destructores (2) + crucero (3) + acorazado (4) + portaviones (5)</p>
                     </button>
-                    <button 
+                    <button
                         onClick={() => seleccionarDificultad('intermedio')}
                         className={styles.botonDificultad}
                     >
                         <h2>Intermedio</h2>
                         <p>3 barcos: crucero (3) + acorazado (4) + portaviones (5)</p>
                     </button>
-                    <button 
+                    <button
                         onClick={() => seleccionarDificultad('avanzado')}
                         className={styles.botonDificultad}
                     >
@@ -678,7 +688,7 @@ export default function pagina() {
                         </div>
                     </div>
                 </div>
-                
+
                 <div id="barcos" className={styles.barcosContainer}>
                     {barcosInfo.map((barco, index) => {
                         const barcoYaColocado = barcosColocados.some(b => b.barco.id === index);
@@ -702,7 +712,7 @@ export default function pagina() {
                     })}
                     <button className={styles.botonConfirmar} onClick={confirmar}>Confirmar</button>
                 </div>
-                
+
                 {/* Tablero del oponente (derecha) */}
                 <div className={styles.tableroContainer}>
                     <div className={styles.encabezadoTablero}>
