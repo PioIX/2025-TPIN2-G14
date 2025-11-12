@@ -6,10 +6,14 @@ import styles from "@/app/puntajes/page.module.css";
 
 
 export default function Puntajes() {
+    const [puntajes, setPuntajes] = useState(null);
     const router = useRouter();
     const irAOtraPagina = () => {
         router.back();
     };
+    useEffect(()=>{
+        traer();
+    })
     async function traer() {
         try {
             const response = await fetch("http://localhost:4000/traerPuntajes", {
@@ -37,7 +41,12 @@ export default function Puntajes() {
         <>
             <section className={styles.section1}>
                 <h1>Historial de juegos:</h1>
-                <button onClick={traer}>ñañañañañañña</button>
+                {/*<button onClick={traer}>ñañañañañañña</button> {puntajes.map((puntaje, index) => {
+                    <h2>{puntaje.}</h2>
+                })
+                }*/}
+                
+                
             </section>
             <section className={styles.center}>
                 <button onClick={irAOtraPagina} className={styles.button}>¡Comenzar Juego!</button>
