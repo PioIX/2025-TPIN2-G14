@@ -8,7 +8,7 @@ import styles from "@/app/home/page.module.css";
 import { useSocket } from "../hooks/useSocket";
 import Image from "next/image";
 import PopUp from "@/components/PopUp";
-import { Poppins } from 'next/font/google'; // 👈 Agregá esto
+import { Poppins } from 'next/font/google'; 
 import { useConnection } from "../hooks/useConnection";
 
 

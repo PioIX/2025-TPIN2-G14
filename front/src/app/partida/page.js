@@ -8,6 +8,25 @@ import styles from "@/app/partida/page.module.css"
 import Button from "@/components/Boton";
 import { useConnection } from "../hooks/useConnection";
 
+const configuracionesBarcos = {
+    normal: [
+        { nombre: 'destructor1', largo: 2, img: '/imagenes/destructorV.png', imgH: '/imagenes/destructorH.png', id: 0 },
+        { nombre: 'destructor2', largo: 2, img: '/imagenes/destructorV.png', imgH: '/imagenes/destructorH.png', id: 1 },
+        { nombre: 'crucero', largo: 3, img: '/imagenes/cruceroV.png', imgH: '/imagenes/cruceroH.png', id: 2 },
+        { nombre: 'acorazado', largo: 4, img: '/imagenes/acorazadoV.png', imgH: '/imagenes/acorazadoH.png', id: 3 },
+        { nombre: 'portaAviones', largo: 5, img: '/imagenes/portaAvionesV.png', imgH: '/imagenes/portaAvionesH.png', id: 4 }
+    ],
+    intermedio: [
+        { nombre: 'crucero', largo: 3, img: '/imagenes/cruceroV.png', imgH: '/imagenes/cruceroH.png', id: 0 },
+        { nombre: 'acorazado', largo: 4, img: '/imagenes/acorazadoV.png', imgH: '/imagenes/acorazadoH.png', id: 1 },
+        { nombre: 'portaAviones', largo: 5, img: '/imagenes/portaAvionesV.png', imgH: '/imagenes/portaAvionesH.png', id: 2 }
+    ],
+    avanzado: [
+        { nombre: 'destructor1', largo: 2, img: '/imagenes/destructorV.png', imgH: '/imagenes/destructorH.png', id: 0 },
+        { nombre: 'crucero', largo: 3, img: '/imagenes/cruceroV.png', imgH: '/imagenes/cruceroH.png', id: 1 }
+    ]
+};
+
 const coordenadasUtilizadas = []
 const destructor1 = 2;
 const destructor2 = 2;
@@ -39,6 +58,11 @@ export default function pagina() {
     const img2 = searchParams.get("img2");
     const idPartida = searchParams.get("idPartida");
     const idLogged = searchParams.get("idLogged");
+
+    const [dificultad, setDificultad] = useState('normal');
+    const [barcosInfo, setBarcosInfo] = useState(configuracionesBarcos.normal);
+    const [mostrarSelectorDificultad, setMostrarSelectorDificultad] = useState(true);
+
     const [selectedCasilla, setSelectedCasilla] = useState("");
     const [selectedCasillaEnemy, setSelectedCasillaEnemy] = useState("");
     const [selectedBarco, setSelectedBarco] = useState(null);
@@ -60,6 +84,18 @@ export default function pagina() {
     const [misCoordenovich, setMisCoordenovich] = useState([]);
     let mensajeAtaca = "";
 
+    const seleccionarDificultad = (nivel) => {
+        setDificultad(nivel);
+        setBarcosInfo(configuracionesBarcos[nivel]);
+        setMostrarSelectorDificultad(false);
+        if (socket && isConnected) {
+            socket.emit("seleccionar_dificultad", {
+                room: idPartida,
+                jugador: idLogged,
+                dificultad: nivel
+            });
+        }
+    };
 
 
     function obtenerCasilla(e) {
@@ -68,6 +104,7 @@ export default function pagina() {
             setPrimerCasilla(id)
         }
         setCoordenadasSeleccionadas(prev => [...prev, id]);
+
         //setCasillasUsadas(prev => [...prev, id]);
     }
     //orientacion
@@ -103,6 +140,22 @@ export default function pagina() {
             socket.off("partida_iniciada", handlePartidaIniciada);
         };
     }, [socket, isConnected, idLogged, idPartida])
+
+    useEffect(() => {
+        if (!socket || !isConnected || !idLogged) return;
+
+        socket.on("recibir_dificultad", data => {
+            console.log("Dificultad recibida del otro jugador:", data.dificultad);
+            setDificultad(data.dificultad);
+            setBarcosInfo(configuracionesBarcos[data.dificultad]);
+            setMostrarSelectorDificultad(false);
+        });
+
+        return () => {
+            socket.off("recibir_dificultad");
+        };
+    }, [socket, isConnected, idLogged]);
+
     useEffect(() => {
         if (!socket || !isConnected || !idLogged) return;
 
@@ -164,8 +217,7 @@ export default function pagina() {
             if (idLogged != data.idJugador) {
                 setBarcosListosContricante(data.listo)
             }
-        }
-        )
+        })
     }, [socket, isConnected, idLogged])
     //turnos
     useEffect(() => {
@@ -176,15 +228,9 @@ export default function pagina() {
             room: idPartida,
             userId: Number(idLogged)
         });
-        /*socket.on("recibir_barcos", data => {
-            if (data.emisor != idLogged) {
-                console.log("Barcos recibidos de ", data.emisor, ": ", data.barcos);
-                setBarcosContrincante(data.barcos);
-            }
-        });*/
+
         socket.on("aceptar_turno", data => {
             if (data.receptor == Number(idLogged)) {
-
                 setMiTurno(data.receptor)
                 console.log("Es mi turno")
                 chequearDisparos();
@@ -391,8 +437,8 @@ export default function pagina() {
                 setSelectedBarco(barcosInfo[i])
             }
         }
-
     }, [selectedBarcoId])
+
     //probando
     function verCoordenadas() {
         console.log(coordenadasContrincante)
@@ -459,8 +505,8 @@ export default function pagina() {
             setMiTurno(Number(nuevoTurno));
             console.log("🔄 Turno cambiado a:", nuevoTurno);
         }, 500);
-
     }
+
     function validarCasillasContiguas(casillas, orientacion) {
         if (casillas.length <= 1) return true;
 
@@ -488,8 +534,8 @@ export default function pagina() {
     //confirmar barcos colocados
     // Modificar la función coords para que retorne las coordenadas
     async function confirmar() {
-        if (barcosColocados.length != 5) {
-            alert("Poné los 5 barcos primero");
+        if (barcosColocados.length != barcosInfo.length) {
+            alert(`Poné los ${barcosInfo.length} barcos primero`);
             return;
         }
         setBarcosListos(2);
@@ -568,7 +614,7 @@ export default function pagina() {
     }
     //mensajes encabezado
     let mensajeHeader = "Ubicá tus barcos, seleccionando un barco y luego las casillas";
-    if (barcosColocados.length == 5 && !confirmado) {
+    if (barcosColocados.length == barcosInfo.length && !confirmado) {
         mensajeHeader = "No te olvides de apretar Confirmar";
     }
     if (confirmado) {
@@ -579,6 +625,7 @@ export default function pagina() {
     } else {
         mensajeAtaca = "Turno Rival"
     }
+
     async function coords() {
         try {
             const response = await fetch(url + "/traerCoordenadas", {
@@ -635,16 +682,13 @@ export default function pagina() {
                         console.log("Impactos obtenidos:", data.impactos);
                     } else {
                         console.log("Error al llamar /impactos:");
-                        //alert("Error");
                     }
                 } catch (error) {
                     console.log("Error al llamar /impactos:", error);
-                    //alert("Error al conectar con el servidor");
                 }
             }
             probarImpactos1();
         } else {
-
             console.log("CHEQUEAR DISPARO JUGADOR 2")
 
             async function probarImpactos2() {
@@ -665,17 +709,14 @@ export default function pagina() {
                     if (data.res) {
                         console.log("Impactos obtenidos:", data.impactos);
                     } else {
-                        //alert("Error");
                         console.log("Error al llamar /impactos:");
                     }
                 } catch (error) {
                     console.log("Error al llamar /impactos:", error);
-                    //alert("Error al conectar con el servidor");
                 }
             }
             probarImpactos2();
         }
-
     }
     //partida termina bien
     async function finalizarPartida() {
@@ -738,11 +779,68 @@ export default function pagina() {
         finalizarPartida();
     }, [idPartida, id1, id2]);*/
 
+    /*async function finalizarPartida() {
+    let info = {
+        id1: id1,
+        id2: id2,
+        id_partida: idPartida,
+        dificultad: dificultad
+    }
+    try {
+        const response = await fetch(url + "/terminarPartida", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(info)
+        })
+        const data = await response.json();
+        if (data.res) {
+            alert("partida finalizada")
+            setPartidaTerminada(2);
+        }
+    } catch (error) {
+        console.log("error")
+        alert("error")
+    }
+} */
+
+    if (mostrarSelectorDificultad) {
+        return (
+            <div className={styles.selectorDificultad}>
+                <h1>Selecciona el nivel de dificultad</h1>
+                <div className={styles.opcionesDificultad}>
+                    <button
+                        onClick={() => seleccionarDificultad('normal')}
+                        className={styles.botonDificultad}
+                    >
+                        <h2>Normal</h2>
+                        <p>5 barcos: 2 destructores (2) + crucero (3) + acorazado (4) + portaviones (5)</p>
+                    </button>
+                    <button
+                        onClick={() => seleccionarDificultad('intermedio')}
+                        className={styles.botonDificultad}
+                    >
+                        <h2>Intermedio</h2>
+                        <p>3 barcos: crucero (3) + acorazado (4) + portaviones (5)</p>
+                    </button>
+                    <button
+                        onClick={() => seleccionarDificultad('avanzado')}
+                        className={styles.botonDificultad}
+                    >
+                        <h2>Avanzado</h2>
+                        <p>2 barcos: 1 destructor (2) + 1 crucero (3)</p>
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <>
             <section className={styles.header}>
                 <h1>
-                    {mensajeHeader} - {mensajeAtaca}
+                    {mensajeHeader} - {mensajeAtaca} - Nivel: {dificultad.toUpperCase()}
                 </h1>
                 <br></br>
             </section>
@@ -884,6 +982,7 @@ export default function pagina() {
                         </div>
                     </div>
                 </div>
+
                 <div id="barcos" className={styles.barcosContainer}>
                     {barcosInfo.map((barco, index) => {
                         const barcoYaColocado = barcosColocados.some(b => b.barco.id === index);
@@ -907,6 +1006,7 @@ export default function pagina() {
                     })}
                     <button className={styles.botonConfirmar} onClick={confirmar}>Confirmar</button>
                 </div>
+
                 {/* Tablero del oponente (derecha) */}
                 <div className={styles.tableroContainer}>
                     <div className={styles.encabezadoTablero}>
@@ -916,9 +1016,7 @@ export default function pagina() {
                             <p>Tablero enemigo</p>
                         </div>
                         {barcosListosContrincante === 3 ? (<div className={styles.checkmark}>✓</div>) : (<div></div>)
-
                         }
-
                     </div>
                     <div className={styles.tablero} id="tablero-enemigo">
                         <div className={styles.fila}>
@@ -1051,7 +1149,6 @@ export default function pagina() {
                             <div className={styles.casillero}><button id="e-J10" onClick={obtenerCasillaEnemy}></button></div>
                         </div>
                     </div>
-                    <button onClick={coords}>probando</button>
                 </div>
                 {partidaTerminada == 2 ? (
                     <>

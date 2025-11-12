@@ -26,7 +26,7 @@ const server = app.listen(port, () => {
 const io = require('socket.io')(server, {
   cors: {
     origin: ["http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
-    methods: ["GET", "POST", "PUT", "DELETE"],
+GET", "POST", "PUT", "DELETE"],
     credentials: true
   }
 });
@@ -403,25 +403,36 @@ app.post('/disparo', async function (req, res) {
 
 app.put('/terminarPartida', async function (req, res) {
   try {
+    const barcosSegunDificultad = {
+      normal: 5,      
+      intermedio: 3,  
+      avanzado: 2    
+    };
+
+    const barcosNecesarios = barcosSegunDificultad[req.body.dificultad];
     console.log(req.body)
     const pedido = await realizarQuery(`SELECT * FROM Partidas WHERE id_partida = ${req.body.id_partida}`);
     for (let i = 0; i < pedido.length; i++) {
-      if (pedido[i].barcos_hundidos_j1 == 5) {
+      if (pedido[i].barcos_hundidos_j1 == barcosNecesarios) {
         await realizarQuery(`UPDATE Partidas SET id_ganador = ${req.body.id2} WHERE id_partida = ${req.body.id_partida}`);
-        return res.send({ res: true, message: "Partida finalizada correctamente." });
-      } else if (pedido[i].barcos_hundidos_j2 == 5) {
+        return res.send({ res: true, message: "Partida finalizada correctamente. Ganó Jugador 2" });
+      } else if (pedido[i].barcos_hundidos_j2 == barcosNecesarios) {
         await realizarQuery(`UPDATE Partidas SET id_ganador = ${req.body.id1} WHERE id_partida = ${req.body.id_partida}`);
         return res.send({ res: true, message: "Partida finalizada correctamente." });
       } else {
         return res.send({ res: false, message: "todavia no termino" })
+
       }
 
     }
+   
+    return res.send({ res: false, message: "Todavía no termina" });
+   
   } catch (error) {
     console.error("Error en /terminarPartida:", error);
     res.send({ res: false, message: "Error al terminar la partida." });
   }
-})
+});
 
 app.delete('/eliminarJugador', async function (req, res) {
   try {
@@ -577,6 +588,16 @@ io.on("connection", (socket) => {
     })
 
   })
+
+  socket.on("seleccionar_dificultad", async data => {
+    console.log("Dificultad seleccionada:", data.dificultad, "por jugador:", data.jugador);
+
+    socket.to(data.room).emit("recibir_dificultad", {
+      dificultad: data.dificultad,
+      jugadorQueSelecciono: data.jugador
+    });
+  });
+
   socket.on("enviar_disparo", async data => {
     console.log("🎯 Disparo recibido desde:", data.emisor, "a jugador:", data.receptor, "a la casilla:", data.casilla);
 
