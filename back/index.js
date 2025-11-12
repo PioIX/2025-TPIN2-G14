@@ -13,7 +13,7 @@ var port = process.env.PORT || 4000;
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors({
-  origin: ["http://192.168.56.1:3000", "http://192.168.56.1:3001", "http://localhost:3000", "http://localhost:3002", "http://localhost:3003"],
+  origin: ["http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3002", "http://localhost:3003"],
   credentials: true
 }));
 
@@ -25,8 +25,8 @@ const server = app.listen(port, () => {
 
 const io = require('socket.io')(server, {
   cors: {
-    origin: ["http://192.168.56.1:3000", "http://192.168.56.1:3001", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    origin: ["http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
+GET", "POST", "PUT", "DELETE"],
     credentials: true
   }
 });
@@ -410,6 +410,7 @@ app.put('/terminarPartida', async function (req, res) {
     };
 
     const barcosNecesarios = barcosSegunDificultad[req.body.dificultad];
+    console.log(req.body)
     const pedido = await realizarQuery(`SELECT * FROM Partidas WHERE id_partida = ${req.body.id_partida}`);
     for (let i = 0; i < pedido.length; i++) {
       if (pedido[i].barcos_hundidos_j1 == barcosNecesarios) {
@@ -417,8 +418,12 @@ app.put('/terminarPartida', async function (req, res) {
         return res.send({ res: true, message: "Partida finalizada correctamente. Ganó Jugador 2" });
       } else if (pedido[i].barcos_hundidos_j2 == barcosNecesarios) {
         await realizarQuery(`UPDATE Partidas SET id_ganador = ${req.body.id1} WHERE id_partida = ${req.body.id_partida}`);
-        return res.send({ res: true, message: "Partida finalizada correctamente. Ganó Jugador 1" });
+        return res.send({ res: true, message: "Partida finalizada correctamente." });
+      } else {
+        return res.send({ res: false, message: "todavia no termino" })
+
       }
+
     }
    
     return res.send({ res: false, message: "Todavía no termina" });
@@ -473,8 +478,38 @@ app.get('/traerBarcos', async function (req, res) {
   }
 });
 
-
-
+/*app.post('/traerCoordenadas', async function (req, res) {
+  try {
+    const coordenadas = await realizarQuery(`
+      SELECT Coordenadas.coordenada_barco AS coordenada, Coordenadas.impacto, Coordenadas.id_barco, Barcos.longitud
+      FROM Coordenadas
+      INNER JOIN Barcos ON Coordenadas.id_barco = Barcos.id_barco
+      INNER JOIN JugadoresPorPartida ON JugadoresPorPartida.id_jugador = Barcos.id_jugador
+      WHERE Coordenadas.id_partida = ${req.body.id_partida} AND JugadoresPorPartida.id_jugador = ${req.body.id_jugador}
+      ORDER BY Barcos.id_barco, Coordenadas.coordenada_barco
+    `);
+    res.send({ res: true, coords: coordenadas });
+  } catch (error) {
+    console.error("Error en /traerCoordenadas:", error);
+    res.send({ res: false, message: "Error obteniendo las coordenadas del jugador." });
+  }
+});*/
+app.post('/traerCoordenadas', async function (req, res) {
+  try {
+    const coordenadas = await realizarQuery(`
+      SELECT Coordenadas.coordenada_barco AS coordenada, Coordenadas.impacto, Coordenadas.id_barco, Barcos.longitud
+      FROM Coordenadas
+      INNER JOIN Barcos ON Coordenadas.id_barco = Barcos.id_barco
+      WHERE Coordenadas.id_partida = ${req.body.id_partida} 
+      AND Barcos.id_jugador = ${req.body.id_jugador}
+      ORDER BY Barcos.id_barco, Coordenadas.coordenada_barco
+    `);
+    res.send({ res: true, coords: coordenadas });
+  } catch (error) {
+    console.error("Error en /traerCoordenadas:", error);
+    res.send({ res: false, message: "Error obteniendo las coordenadas del jugador." });
+  }
+});
 let jugadoresEnLinea = [];
 
 const maxPlayers = 3;
@@ -569,10 +604,10 @@ io.on("connection", (socket) => {
     let disparo = false;
 
     // Buscar al jugador receptor en la partida
-    const jugadorReceptor = jugadoresEnPartida.find(j =>
-      j.id == data.receptor
+    let jugadorReceptor = jugadoresEnPartida.find(j =>
+      Number(j.id) == Number(data.receptor) && Number(j.room) == Number(data.room)
     );
-
+    console.log("Jugador Receptor: ", jugadorReceptor)
     if (!jugadorReceptor) {
       console.error("❌ No se encontró al jugador receptor:", data.receptor);
       console.log("📋 Jugadores en partida:", jugadoresEnPartida);
@@ -613,21 +648,27 @@ io.on("connection", (socket) => {
     console.log("Recibiendo barcos de: ", data.jugador, " sus barcos son: ", data.barcos)
 
     players++;
+    console.log("casillas : ", data.casillas, " de: ", data.jugador)
 
 
-    if (players < maxPlayers) {
-      jugadoresEnPartida.push({
-        id: data.jugador,
-        casillas: data.casillas,
-        barcos: data.barcos
-      })
-    }
-    if (jugadoresEnPartida.length == 2) {
+    jugadoresEnPartida.push({
+      id: data.jugador,
+      casillas: data.casillas,
+      barcos: data.barcos,
+      room: data.room
+    })
+    /*let jugadorEnRoom = jugadoresEnPartida.find(j =>
+      j.room == data.room
+    );
+    console.log({jugadorEnRoom}) */
+    if (jugadoresEnPartida.map((j) => j.room).filter((room) => room === data.room).length === 2) {
       io.to(data.room).emit("partida_iniciada", {
         partidaIniciada: true,
         idPartida: data.room
       })
     }
+
+
 
     /*io.to(data.room).emit('recibir_barcos', {
       receptor: data.jugador2,
