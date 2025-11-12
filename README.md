@@ -1,4 +1,4 @@
-# ⚓ Batalla Esponjosa - GRUPO 14 - 2025
+# 🪼 Batalla Esponjosa - GRUPO 14 - 2025
 
 **Batalla Esponjosa** es un juego digital para **dos jugadores**, basado en el clásico juego de mesa **Batalla Naval**, pero edición Bob Esponja.  
 El objetivo es hundir todos los barcos del oponente antes de que él hunda los tuyos.
