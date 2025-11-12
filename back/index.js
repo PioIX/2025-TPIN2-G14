@@ -13,7 +13,7 @@ var port = process.env.PORT || 4000;
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors({
-  origin: ["http://10.1.4.211:3000","http://10.1.4.211:3001","http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3002", "http://localhost:3003"],
+  origin: ["http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3002", "http://localhost:3003"],
   credentials: true
 }));
 
@@ -25,7 +25,7 @@ const server = app.listen(port, () => {
 
 const io = require('socket.io')(server, {
   cors: {
-    origin: ["http://10.1.4.211:3000","http://10.1.4.211:3001","http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
+    origin: ["http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
   }
@@ -629,7 +629,7 @@ io.on("connection", (socket) => {
     players++;
     console.log("casillas : ", data.casillas, " de: ", data.jugador)
 
-    
+
     jugadoresEnPartida.push({
       id: data.jugador,
       casillas: data.casillas,
@@ -640,12 +640,14 @@ io.on("connection", (socket) => {
       j.room == data.room
     );
     console.log({jugadorEnRoom}) */
-    if (jugadorEnRoom.length == 2) {
+    if (jugadoresEnPartida.map((j) => j.room).filter((room) => room === data.room).length === 2) {
       io.to(data.room).emit("partida_iniciada", {
         partidaIniciada: true,
         idPartida: data.room
       })
     }
+
+
 
     /*io.to(data.room).emit('recibir_barcos', {
       receptor: data.jugador2,
