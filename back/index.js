@@ -403,23 +403,31 @@ app.post('/disparo', async function (req, res) {
 
 app.put('/terminarPartida', async function (req, res) {
   try {
+    const barcosSegunDificultad = {
+      normal: 5,      
+      intermedio: 3,  
+      avanzado: 2    
+    };
+
+    const barcosNecesarios = barcosSegunDificultad[req.body.dificultad];
     const pedido = await realizarQuery(`SELECT * FROM Partidas WHERE id_partida = ${req.body.id_partida}`);
     for (let i = 0; i < pedido.length; i++) {
-      if (pedido[i].barcos_hundidos_j1 == 5) {
+      if (pedido[i].barcos_hundidos_j1 == barcosNecesarios) {
         await realizarQuery(`UPDATE Partidas SET id_ganador = ${req.body.id2} WHERE id_partida = ${req.body.id_partida}`);
-        return res.send({ res: true, message: "Partida finalizada correctamente." });
-      } else if (pedido[i].barcos_hundidos_j2 == 5) {
+        return res.send({ res: true, message: "Partida finalizada correctamente. Ganó Jugador 2" });
+      } else if (pedido[i].barcos_hundidos_j2 == barcosNecesarios) {
         await realizarQuery(`UPDATE Partidas SET id_ganador = ${req.body.id1} WHERE id_partida = ${req.body.id_partida}`);
-        return res.send({ res: true, message: "Partida finalizada correctamente." });
-      } else {
-        return res.send({ res:false,message:"todavia no termina"})
+        return res.send({ res: true, message: "Partida finalizada correctamente. Ganó Jugador 1" });
       }
     }
+   
+    return res.send({ res: false, message: "Todavía no termina" });
+   
   } catch (error) {
     console.error("Error en /terminarPartida:", error);
     res.send({ res: false, message: "Error al terminar la partida." });
   }
-})
+});
 
 app.delete('/eliminarJugador', async function (req, res) {
   try {

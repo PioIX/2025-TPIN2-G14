@@ -511,6 +511,32 @@ export default function pagina() {
         finalizarPartida();
     }, [idPartida, id1, id2]);
 
+    /*async function finalizarPartida() {
+    let info = {
+        id1: id1,
+        id2: id2,
+        id_partida: idPartida,
+        dificultad: dificultad
+    }
+    try {
+        const response = await fetch(url + "/terminarPartida", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(info)
+        })
+        const data = await response.json();
+        if (data.res) {
+            alert("partida finalizada")
+            setPartidaTerminada(2);
+        }
+    } catch (error) {
+        console.log("error")
+        alert("error")
+    }
+} */
+
     if (mostrarSelectorDificultad) {
         return (
             <div className={styles.selectorDificultad}>
