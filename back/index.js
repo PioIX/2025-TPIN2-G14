@@ -13,7 +13,7 @@ var port = process.env.PORT || 4000;
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors({
-  origin: ["http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3002", "http://localhost:3003"],
+  origin: ["http://192.168.159.1:3000", "http://192.168.159.1:3001", "http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3002", "http://localhost:3003"],
   credentials: true
 }));
 
@@ -25,8 +25,8 @@ const server = app.listen(port, () => {
 
 const io = require('socket.io')(server, {
   cors: {
-    origin: ["http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
-GET", "POST", "PUT", "DELETE"],
+    origin: ["http://192.168.159.1:3000", "http://192.168.159.1:3001", "http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
   }
 });
@@ -404,33 +404,66 @@ app.post('/disparo', async function (req, res) {
 app.put('/terminarPartida', async function (req, res) {
   try {
     const barcosSegunDificultad = {
-      normal: 5,      
-      intermedio: 3,  
-      avanzado: 2    
+      normal: 5,
+      intermedio: 3,
+      avanzado: 2
     };
 
     const barcosNecesarios = barcosSegunDificultad[req.body.dificultad];
-    console.log(req.body)
-    const pedido = await realizarQuery(`SELECT * FROM Partidas WHERE id_partida = ${req.body.id_partida}`);
-    for (let i = 0; i < pedido.length; i++) {
-      if (pedido[i].barcos_hundidos_j1 == barcosNecesarios) {
-        await realizarQuery(`UPDATE Partidas SET id_ganador = ${req.body.id2} WHERE id_partida = ${req.body.id_partida}`);
-        return res.send({ res: true, message: "Partida finalizada correctamente. Ganó Jugador 2" });
-      } else if (pedido[i].barcos_hundidos_j2 == barcosNecesarios) {
-        await realizarQuery(`UPDATE Partidas SET id_ganador = ${req.body.id1} WHERE id_partida = ${req.body.id_partida}`);
-        return res.send({ res: true, message: "Partida finalizada correctamente." });
-      } else {
-        return res.send({ res: false, message: "todavia no termino" })
+    console.log("Verificando fin de partida:", req.body);
 
-      }
+    const partida = await realizarQuery(
+      `SELECT * FROM Partidas WHERE id_partida = ${req.body.id_partida}`
+    );
 
+    if (partida.length === 0) {
+      return res.send({ res: false, message: "Partida no encontrada" });
     }
-   
-    return res.send({ res: false, message: "Todavía no termina" });
-   
+
+    const { barcos_hundidos_j1, barcos_hundidos_j2, id_ganador } = partida[0];
+
+    if (id_ganador) {
+      return res.send({
+        res: true,
+        ganador: id_ganador,
+        message: "Partida ya finalizada"
+      });
+    }
+
+    if (barcos_hundidos_j1 >= barcosNecesarios) {
+      await realizarQuery(
+        `UPDATE Partidas SET id_ganador = ${req.body.id2} 
+         WHERE id_partida = ${req.body.id_partida}`
+      );
+      return res.send({
+        res: true,
+        ganador: req.body.id2,
+        message: "Ganó Jugador 2"
+      });
+    }
+
+    if (barcos_hundidos_j2 >= barcosNecesarios) {
+      await realizarQuery(
+        `UPDATE Partidas SET id_ganador = ${req.body.id1} 
+         WHERE id_partida = ${req.body.id_partida}`
+      );
+      return res.send({
+        res: true,
+        ganador: req.body.id1,
+        message: "Ganó Jugador 1"
+      });
+    }
+
+    return res.send({
+      res: false,
+      message: "Partida en curso",
+      barcos_hundidos_j1,
+      barcos_hundidos_j2
+    });
+
   } catch (error) {
     console.error("Error en /terminarPartida:", error);
-    res.send({ res: false, message: "Error al terminar la partida." });
+    res.send({ res: false, message: "Error al verificar la partida." });
   }
 });
 
@@ -528,7 +561,6 @@ io.on("connection", (socket) => {
   socket.on('joinRoom', data => {
     console.log("Usuario uniéndose a sala:", data);
 
-    // Salir de la sala anterior si existe
     if (req.session.room) {
       socket.leave(req.session.room);
       if (jugadoresEnLinea.length > 0) {
@@ -543,7 +575,6 @@ io.on("connection", (socket) => {
 
     }
 
-    // Guardar la sala y el usuario en la sesión
     req.session.room = data.room;
     if (data.userId) {
       req.session.user = data.userId;
@@ -553,7 +584,6 @@ io.on("connection", (socket) => {
       }
     }
 
-    // Unirse a la nueva sala
     socket.join(req.session.room);
 
     io.to(data.room).emit('jugadores_en_linea', { jugadores: jugadoresEnLinea })
@@ -567,12 +597,10 @@ io.on("connection", (socket) => {
 
     req.session.save();
   })
-  //socket.join('global');
   socket.on('nuevaPartida', async data => {
     console.log("jugador emisor: " + data.jugador1);
     console.log("jugador receptor: " + data.jugador2);
 
-    // Emitir a toda la sala 0 (sala de espera)
     io.to(0).emit('partidaRequest', {
       player2Id: data.jugador2Id,
       player1Id: data.jugador1Id,
@@ -599,36 +627,33 @@ io.on("connection", (socket) => {
   });
 
   socket.on("enviar_disparo", async data => {
-    console.log("🎯 Disparo recibido desde:", data.emisor, "a jugador:", data.receptor, "a la casilla:", data.casilla);
+    console.log("Disparo recibido desde:", data.emisor, "a jugador:", data.receptor, "a la casilla:", data.casilla);
 
     let disparo = false;
 
-    // Buscar al jugador receptor en la partida
     let jugadorReceptor = jugadoresEnPartida.find(j =>
       Number(j.id) == Number(data.receptor) && Number(j.room) == Number(data.room)
     );
     console.log("Jugador Receptor: ", jugadorReceptor)
     if (!jugadorReceptor) {
-      console.error("❌ No se encontró al jugador receptor:", data.receptor);
-      console.log("📋 Jugadores en partida:", jugadoresEnPartida);
+      console.error("No se encontró al jugador receptor:", data.receptor);
+      console.log("Jugadores en partida:", jugadoresEnPartida);
       return;
     }
 
     if (!jugadorReceptor.casillas) {
-      console.error("❌ El jugador no tiene casillas definidas");
+      console.error("El jugador no tiene casillas definidas");
       return;
     }
 
-    // Verificar si hay impacto
     console.log(jugadorReceptor.casillas)
     if (jugadorReceptor.casillas.includes(data.casilla)) {
       disparo = true;
-      console.log("💥 ¡IMPACTO! en casilla:", data.casilla);
+      console.log("¡IMPACTO! en casilla:", data.casilla);
     } else {
-      console.log("💧 Agua en casilla:", data.casilla);
+      console.log("Agua en casilla:", data.casilla);
     }
 
-    // Emitir el resultado
     io.to(data.room).emit("recibir_disparo", {
       receptor: data.receptor,
       emisor: data.emisor,
@@ -657,10 +682,7 @@ io.on("connection", (socket) => {
       barcos: data.barcos,
       room: data.room
     })
-    /*let jugadorEnRoom = jugadoresEnPartida.find(j =>
-      j.room == data.room
-    );
-    console.log({jugadorEnRoom}) */
+
     if (jugadoresEnPartida.map((j) => j.room).filter((room) => room === data.room).length === 2) {
       io.to(data.room).emit("partida_iniciada", {
         partidaIniciada: true,
@@ -668,13 +690,6 @@ io.on("connection", (socket) => {
       })
     }
 
-
-
-    /*io.to(data.room).emit('recibir_barcos', {
-      receptor: data.jugador2,
-      barcos: data.barcos,
-      emisor: data.jugador1
-    })*/
   })
   socket.on("enviar_partidaId", async data => {
     console.log("Enviando id: ", data.partidId, " a jugador: ", data.jugador2)
@@ -694,14 +709,79 @@ io.on("connection", (socket) => {
     });
   })
 
+  socket.on("verificar_fin_partida", async data => {
+    console.log("Verificando fin de partida para room:", data.room);
 
-  // Cuando se envía un mensaje
+    try {
+      const barcosSegunDificultad = {
+        normal: 5,
+        intermedio: 3,
+        avanzado: 2
+      };
+
+      const barcosNecesarios = barcosSegunDificultad[data.dificultad];
+
+      const partida = await realizarQuery(
+        `SELECT * FROM Partidas WHERE id_partida = ${data.idPartida}`
+      );
+
+      if (partida.length === 0) {
+        console.error("Partida no encontrada");
+        return;
+      }
+
+      const { barcos_hundidos_j1, barcos_hundidos_j2, id_ganador } = partida[0];
+
+      if (id_ganador) {
+        io.to(data.room).emit("partida_finalizada", {
+          ganador: id_ganador,
+          id1: data.id1,
+          id2: data.id2
+        });
+        return;
+      }
+
+      if (barcos_hundidos_j1 >= barcosNecesarios) {
+        await realizarQuery(
+          `UPDATE Partidas SET id_ganador = ${data.id2} WHERE id_partida = ${data.idPartida}`
+        );
+
+        console.log(`¡Jugador ${data.id2} GANÓ!`);
+
+        io.to(data.room).emit("partida_finalizada", {
+          ganador: data.id2,
+          id1: data.id1,
+          id2: data.id2
+        });
+        return;
+      }
+
+      if (barcos_hundidos_j2 >= barcosNecesarios) {
+        await realizarQuery(
+          `UPDATE Partidas SET id_ganador = ${data.id1} WHERE id_partida = ${data.idPartida}`
+        );
+
+        console.log(`¡Jugador ${data.id1} GANÓ!`);
+
+        io.to(data.room).emit("partida_finalizada", {
+          ganador: data.id1,
+          id1: data.id1,
+          id2: data.id2
+        });
+        return;
+      }
+
+      console.log("Partida continúa:", { barcos_hundidos_j1, barcos_hundidos_j2, necesarios: barcosNecesarios });
+
+    } catch (error) {
+      console.error("Error verificando fin de partida:", error);
+    }
+  });
+
   socket.on('solicitar_imagenes', data => {
     console.log("Solicitando imágenes en room:", data.room);
-    // Emitir a todos en el room EXCEPTO al que envió la solicitud
     socket.to(data.room).emit('reenviar_imagen', { room: data.room });
   });
-  // Opcional: Para salir de una sala
   socket.on('leaveRoom', data => {
     if (data.room) {
       socket.leave(data.room);
@@ -712,14 +792,12 @@ io.on("connection", (socket) => {
   socket.on('disconnect', () => {
     console.log("Usuario desconectado");
 
-    // Remover usuario de jugadoresEnLinea
     if (req.session.user) {
       const index = jugadoresEnLinea.indexOf(req.session.user);
       if (index !== -1) {
         jugadoresEnLinea.splice(index, 1);
       }
 
-      // Emitir la lista actualizada a la sala
       if (req.session.room) {
         io.to(req.session.room).emit('jugadores_en_linea', { jugadores: jugadoresEnLinea });
       }
