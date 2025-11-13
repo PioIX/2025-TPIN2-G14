@@ -13,7 +13,7 @@ var port = process.env.PORT || 4000;
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors({
-  origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
+  origin: ["http://10.1.4.209:3000", "http://10.1.4.209:3001", "http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://10.1.4.209:3000", "http://10.1.4.209:3001", "http://localhost:3000", "http://localhost:3002", "http://localhost:3003"],
   credentials: true
 }));
 
@@ -25,7 +25,7 @@ const server = app.listen(port, () => {
 
 const io = require('socket.io')(server, {
   cors: {
-    origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
+    origin: ["http://192.168.159.1:3000", "http://192.168.159.1:3001", "http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://10.1.4.209:3000", "http://10.1.4.209:3001", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
   }
@@ -121,6 +121,7 @@ app.post('/crearPartida', async function (req, res) {
   try {
     console.log("Datos recibidos:", req.body);
 
+    // Insertar la partida y obtener el insertId directamente
     const resultado = await realizarQuery(`
       INSERT INTO Partidas (id_ganador, barcos_hundidos_j1, barcos_hundidos_j2)
       VALUES (NULL, 0, 0)
@@ -130,6 +131,7 @@ app.post('/crearPartida', async function (req, res) {
 
     console.log("ID partida creada:", idPartida);
 
+    // Insertar jugadores en la partida
     await realizarQuery(`
       INSERT INTO JugadoresPorPartida (id_partida, id_jugador)
       VALUES (${idPartida}, ${req.body.jugador1}), (${idPartida}, ${req.body.jugador2})
@@ -144,29 +146,166 @@ app.post('/crearPartida', async function (req, res) {
   }
 });
 
-app.get('/impactos', async (req, res) => {
+/*app.post('/impactosJ1', async (req, res) => {
+  let hundido = false
   try {
-    const impactos = await realizarQuery(`SELECT Disparos.id_disparo, Coordenadas.id_barco, 
-      Coordenadas.coordenada_barco, Disparos.coordenada_disparo
-      FROM Disparos
-      INNER JOIN Coordenadas ON Disparos.coordenada_disparo = Coordenadas.coordenada_barco
-      AND Disparos.id_partida = Coordenadas.id_partida
-      WHERE Disparos.id_jugador != Coordenadas.id_jugador`);
-
-    if (impactos.length == 0) {
-      return res.send({ res: true, message: "No hay impactos para actualizar" });
+    const impactos = await realizarQuery(`
+      SELECT longitud, impactos, id_barco 
+      FROM Barcos
+      WHERE id_partida = ${req.body.id_partida} AND id_jugador = ${req.body.id_jugador}`);
+    for (let barco of impactos) {
+      if (barco.impactos === barco.longitud) {
+        console.log(barco.longitud, barco.impactos)
+        const hundir = await realizarQuery(`UPDATE Partidas SET barcos_hundidos_j1 = barcos_hundidos_j1 + 1
+        WHERE id_partida = ${req.body.id_partida}`);
+        hundido = true;
+        console.log("Hay hundidos J1")
+        console.log(hundir)
+      }
     }
-
-    for (let i = 0; i <= 5; i++) {
-      await realizarQuery(`UPDATE Barcos SET impactos = impactos + 1 
-        WHERE id_barco = ${impactos[i].id_barco}`);
+    if (hundido) {
+      return res.send({ res: true, message: "Barcos hundidos actualizados" });
+    } else {
+      return res.send({ res: false, message: "Todavia no hundio ningun barco" })
     }
-
-    res.send({ res: true, message: `Se actualizaron ${impactos.length} impactos` });
-    console.log({ res: true, message: `Se actualizaron ${impactos.length} impactos` });
   } catch (error) {
-    console.error("Error en /impactos:", error);
-    res.send({ res: false, message: "Error en impactos" });
+    console.log("Error http")
+    return res.send({ res: false, message: "Error al actualizar barcos hundidos" });
+  }
+
+});
+
+app.post('/impactosJ2', async (req, res) => {
+  let hundido = false;
+  try {
+    const impactos = await realizarQuery(`SELECT longitud, impactos, id_barco FROM Barcos
+       WHERE id_partida = ${req.body.id_partida} AND id_jugador = ${req.body.id_jugador}`);
+    console.log("estos son los impactos del J2: " + impactos)
+    for (let barco of impactos) {
+      console.log(barco)
+      if (barco.impactos === barco.longitud) {
+        console.log(barco.longitud, barco.impactos)
+        const hundir = await realizarQuery(`UPDATE Partidas SET barcos_hundidos_j2 = barcos_hundidos_j2 + 1
+          WHERE id_partida = ${req.body.id_partida}`);
+        hundido = true;
+        console.log("Si hay hundidos j2")
+        console.log(hundir)
+      }
+
+    }
+    if (hundido) {
+      return res.send({ res: true, message: "Barcos hundidos actualizados" });
+    } else {
+      return res.send({ res: false, message: "Todavia no hundio ningun barco" })
+    }
+
+  } catch (error) {
+    console.log("Error http")
+    return res.send({ res: false, message: "Error al actualizar barcos hundidos" });
+  }
+
+});*/
+
+//
+app.post('/impactosJ1', async (req, res) => {
+  try {
+    const barcos = await realizarQuery(`
+      SELECT longitud, impactos, id_barco, hundido
+      FROM Barcos
+      WHERE id_partida = ${req.body.id_partida} 
+      AND id_jugador = ${req.body.id_jugador}
+    `);
+
+    let barcosHundidosNuevos = 0;
+
+    for (let barco of barcos) {
+      if (barco.impactos === barco.longitud && !barco.hundido) {
+        await realizarQuery(`
+          UPDATE Barcos 
+          SET hundido = true 
+          WHERE id_barco = ${barco.id_barco}
+        `);
+
+        barcosHundidosNuevos++;
+        console.log(`Barco ${barco.id_barco} hundido!`);
+      }
+    }
+
+    if (barcosHundidosNuevos > 0) {
+      await realizarQuery(`
+        UPDATE Partidas 
+        SET barcos_hundidos_j1 = barcos_hundidos_j1 + ${barcosHundidosNuevos}
+        WHERE id_partida = ${req.body.id_partida}
+      `);
+
+      return res.send({
+        res: true,
+        message: `${barcosHundidosNuevos} barco(s) hundido(s)`
+      });
+    }
+
+    return res.send({
+      res: false,
+      message: "Todavía no hundió ningún barco nuevo"
+    });
+
+  } catch (error) {
+    console.error("Error en /impactosJ1:", error);
+    return res.send({
+      res: false,
+      message: "Error al actualizar barcos hundidos"
+    });
+  }
+});
+
+app.post('/impactosJ2', async (req, res) => {
+  try {
+    const barcos = await realizarQuery(`
+      SELECT longitud, impactos, id_barco, hundido
+      FROM Barcos
+      WHERE id_partida = ${req.body.id_partida} 
+      AND id_jugador = ${req.body.id_jugador}
+    `);
+
+    let barcosHundidosNuevos = 0;
+
+    for (let barco of barcos) {
+      if (barco.impactos === barco.longitud && !barco.hundido) {
+        await realizarQuery(`
+          UPDATE Barcos 
+          SET hundido = true 
+          WHERE id_barco = ${barco.id_barco}
+        `);
+
+        barcosHundidosNuevos++;
+        console.log(`Barco ${barco.id_barco} hundido!`);
+      }
+    }
+
+    if (barcosHundidosNuevos > 0) {
+      await realizarQuery(`
+        UPDATE Partidas 
+        SET barcos_hundidos_j2 = barcos_hundidos_j2 + ${barcosHundidosNuevos}
+        WHERE id_partida = ${req.body.id_partida}
+      `);
+
+      return res.send({
+        res: true,
+        message: `${barcosHundidosNuevos} barco(s) hundido(s)`
+      });
+    }
+
+    return res.send({
+      res: false,
+      message: "Todavía no hundió ningún barco nuevo"
+    });
+
+  } catch (error) {
+    console.error("Error en /impactosJ2:", error);
+    return res.send({
+      res: false,
+      message: "Error al actualizar barcos hundidos"
+    });
   }
 });
 
@@ -177,7 +316,7 @@ app.post('/agregarBarco', async (req, res) => {
     const id_partida = req.body.id_partida;
     const id_jugador = req.body.id_jugador;
     const barcos = req.body.barcos;
-    
+
     for (const barco of barcos) {
       const resultadoBarco = await realizarQuery(`
         INSERT INTO Barcos (longitud, impactos, id_partida, id_jugador)
@@ -203,7 +342,25 @@ app.post('/agregarBarco', async (req, res) => {
     res.send({ res: false, message: "Error al agregar barcos" });
   }
 });
-
+app.get('/traerPuntajes', async (req, res) => {
+  try {
+    const respuesta = await realizarQuery(`SELECT Partidas.id_ganador, Jugadores.usuario, COUNT(Partidas.id_ganador) AS partidas_ganadas
+      FROM Partidas
+      INNER JOIN Jugadores ON Partidas.id_ganador = Jugadores.id_jugador
+      WHERE Partidas.id_ganador IS NOT NULL
+      GROUP BY Partidas.id_ganador, Jugadores.usuario
+      ORDER BY partidas_ganadas DESC;`)
+    console.log(respuesta.length)
+    if (respuesta.length == 0) {
+      return res.send({ res: false, message: "error" });
+    } else {
+      return res.send({ res: true, message: respuesta });
+    }
+  } catch {
+    console.log("error en traer puntajes");
+    return res.send({ res: false, msj: "error" });
+  }
+})
 app.post('/disparo', async function (req, res) {
   try {
     console.log(req.body);
@@ -244,6 +401,71 @@ app.post('/disparo', async function (req, res) {
   }
 });
 
+app.put('/terminarPartida', async function (req, res) {
+  try {
+    const barcosSegunDificultad = {
+      normal: 5,
+      intermedio: 3,
+      avanzado: 2
+    };
+
+    const barcosNecesarios = barcosSegunDificultad[req.body.dificultad];
+    console.log("Verificando fin de partida:", req.body);
+
+    const partida = await realizarQuery(
+      `SELECT * FROM Partidas WHERE id_partida = ${req.body.id_partida}`
+    );
+
+    if (partida.length === 0) {
+      return res.send({ res: false, message: "Partida no encontrada" });
+    }
+
+    const { barcos_hundidos_j1, barcos_hundidos_j2, id_ganador } = partida[0];
+
+    if (id_ganador) {
+      return res.send({
+        res: true,
+        ganador: id_ganador,
+        message: "Partida ya finalizada"
+      });
+    }
+
+    if (barcos_hundidos_j1 >= barcosNecesarios) {
+      await realizarQuery(
+        `UPDATE Partidas SET id_ganador = ${req.body.id2} 
+         WHERE id_partida = ${req.body.id_partida}`
+      );
+      return res.send({
+        res: true,
+        ganador: req.body.id2,
+        message: "Ganó Jugador 2"
+      });
+    }
+
+    if (barcos_hundidos_j2 >= barcosNecesarios) {
+      await realizarQuery(
+        `UPDATE Partidas SET id_ganador = ${req.body.id1} 
+         WHERE id_partida = ${req.body.id_partida}`
+      );
+      return res.send({
+        res: true,
+        ganador: req.body.id1,
+        message: "Ganó Jugador 1"
+      });
+    }
+
+    return res.send({
+      res: false,
+      message: "Partida en curso",
+      barcos_hundidos_j1,
+      barcos_hundidos_j2
+    });
+
+  } catch (error) {
+    console.error("Error en /terminarPartida:", error);
+    res.send({ res: false, message: "Error al verificar la partida." });
+  }
+});
 
 app.delete('/eliminarJugador', async function (req, res) {
   try {
@@ -289,6 +511,38 @@ app.get('/traerBarcos', async function (req, res) {
   }
 });
 
+/*app.post('/traerCoordenadas', async function (req, res) {
+  try {
+    const coordenadas = await realizarQuery(`
+      SELECT Coordenadas.coordenada_barco AS coordenada, Coordenadas.impacto, Coordenadas.id_barco, Barcos.longitud
+      FROM Coordenadas
+      INNER JOIN Barcos ON Coordenadas.id_barco = Barcos.id_barco
+      INNER JOIN JugadoresPorPartida ON JugadoresPorPartida.id_jugador = Barcos.id_jugador
+      WHERE Coordenadas.id_partida = ${req.body.id_partida} AND JugadoresPorPartida.id_jugador = ${req.body.id_jugador}
+      ORDER BY Barcos.id_barco, Coordenadas.coordenada_barco
+    `);
+    res.send({ res: true, coords: coordenadas });
+  } catch (error) {
+    console.error("Error en /traerCoordenadas:", error);
+    res.send({ res: false, message: "Error obteniendo las coordenadas del jugador." });
+  }
+});*/
+app.post('/traerCoordenadas', async function (req, res) {
+  try {
+    const coordenadas = await realizarQuery(`
+      SELECT Coordenadas.coordenada_barco AS coordenada, Coordenadas.impacto, Coordenadas.id_barco, Barcos.longitud
+      FROM Coordenadas
+      INNER JOIN Barcos ON Coordenadas.id_barco = Barcos.id_barco
+      WHERE Coordenadas.id_partida = ${req.body.id_partida} 
+      AND Barcos.id_jugador = ${req.body.id_jugador}
+      ORDER BY Barcos.id_barco, Coordenadas.coordenada_barco
+    `);
+    res.send({ res: true, coords: coordenadas });
+  } catch (error) {
+    console.error("Error en /traerCoordenadas:", error);
+    res.send({ res: false, message: "Error obteniendo las coordenadas del jugador." });
+  }
+});
 let jugadoresEnLinea = [];
 
 const maxPlayers = 3;
@@ -307,7 +561,6 @@ io.on("connection", (socket) => {
   socket.on('joinRoom', data => {
     console.log("Usuario uniéndose a sala:", data);
 
-    // Salir de la sala anterior si existe
     if (req.session.room) {
       socket.leave(req.session.room);
       if (jugadoresEnLinea.length > 0) {
@@ -322,7 +575,6 @@ io.on("connection", (socket) => {
 
     }
 
-    // Guardar la sala y el usuario en la sesión
     req.session.room = data.room;
     if (data.userId) {
       req.session.user = data.userId;
@@ -332,7 +584,6 @@ io.on("connection", (socket) => {
       }
     }
 
-    // Unirse a la nueva sala
     socket.join(req.session.room);
 
     io.to(data.room).emit('jugadores_en_linea', { jugadores: jugadoresEnLinea })
@@ -346,12 +597,10 @@ io.on("connection", (socket) => {
 
     req.session.save();
   })
-  //socket.join('global');
   socket.on('nuevaPartida', async data => {
     console.log("jugador emisor: " + data.jugador1);
     console.log("jugador receptor: " + data.jugador2);
 
-    // Emitir a toda la sala 0 (sala de espera)
     io.to(0).emit('partidaRequest', {
       player2Id: data.jugador2Id,
       player1Id: data.jugador1Id,
@@ -360,38 +609,51 @@ io.on("connection", (socket) => {
       imagen1: data.imagen1
     });
   });
+  socket.on("barcos_listos", async data => {
+    io.to(data.room).emit("recibir_listo", {
+      listo: data.esListo,
+      idJugador: data.jugadorId
+    })
+
+  })
+
+  socket.on("seleccionar_dificultad", async data => {
+    console.log("Dificultad seleccionada:", data.dificultad, "por jugador:", data.jugador);
+
+    socket.to(data.room).emit("recibir_dificultad", {
+      dificultad: data.dificultad,
+      jugadorQueSelecciono: data.jugador
+    });
+  });
 
   socket.on("enviar_disparo", async data => {
-    console.log("🎯 Disparo recibido desde:", data.emisor, "a jugador:", data.receptor, "a la casilla:", data.casilla);
+    console.log("Disparo recibido desde:", data.emisor, "a jugador:", data.receptor, "a la casilla:", data.casilla);
 
     let disparo = false;
 
-    // Buscar al jugador receptor en la partida
-    const jugadorReceptor = jugadoresEnPartida.find(j =>
-      j.id == data.receptor
+    let jugadorReceptor = jugadoresEnPartida.find(j =>
+      Number(j.id) == Number(data.receptor) && Number(j.room) == Number(data.room)
     );
-
+    console.log("Jugador Receptor: ", jugadorReceptor)
     if (!jugadorReceptor) {
-      console.error("❌ No se encontró al jugador receptor:", data.receptor);
-      console.log("📋 Jugadores en partida:", jugadoresEnPartida);
+      console.error("No se encontró al jugador receptor:", data.receptor);
+      console.log("Jugadores en partida:", jugadoresEnPartida);
       return;
     }
 
     if (!jugadorReceptor.casillas) {
-      console.error("❌ El jugador no tiene casillas definidas");
+      console.error("El jugador no tiene casillas definidas");
       return;
     }
 
-    // Verificar si hay impacto
     console.log(jugadorReceptor.casillas)
     if (jugadorReceptor.casillas.includes(data.casilla)) {
       disparo = true;
-      console.log("💥 ¡IMPACTO! en casilla:", data.casilla);
+      console.log("¡IMPACTO! en casilla:", data.casilla);
     } else {
-      console.log("💧 Agua en casilla:", data.casilla);
+      console.log("Agua en casilla:", data.casilla);
     }
 
-    // Emitir el resultado
     io.to(data.room).emit("recibir_disparo", {
       receptor: data.receptor,
       emisor: data.emisor,
@@ -411,27 +673,23 @@ io.on("connection", (socket) => {
     console.log("Recibiendo barcos de: ", data.jugador, " sus barcos son: ", data.barcos)
 
     players++;
+    console.log("casillas : ", data.casillas, " de: ", data.jugador)
 
 
-    if (players < maxPlayers) {
-      jugadoresEnPartida.push({
-        id: data.jugador,
-        casillas: data.casillas,
-        barcos: data.barcos
-      })
-    }
-    if (jugadoresEnPartida.length == 2) {
+    jugadoresEnPartida.push({
+      id: data.jugador,
+      casillas: data.casillas,
+      barcos: data.barcos,
+      room: data.room
+    })
+
+    if (jugadoresEnPartida.map((j) => j.room).filter((room) => room === data.room).length === 2) {
       io.to(data.room).emit("partida_iniciada", {
         partidaIniciada: true,
         idPartida: data.room
       })
     }
 
-    /*io.to(data.room).emit('recibir_barcos', {
-      receptor: data.jugador2,
-      barcos: data.barcos,
-      emisor: data.jugador1
-    })*/
   })
   socket.on("enviar_partidaId", async data => {
     console.log("Enviando id: ", data.partidId, " a jugador: ", data.jugador2)
@@ -451,14 +709,79 @@ io.on("connection", (socket) => {
     });
   })
 
+  socket.on("verificar_fin_partida", async data => {
+    console.log("Verificando fin de partida para room:", data.room);
 
-  // Cuando se envía un mensaje
+    try {
+      const barcosSegunDificultad = {
+        normal: 5,
+        intermedio: 3,
+        avanzado: 2
+      };
+
+      const barcosNecesarios = barcosSegunDificultad[data.dificultad];
+
+      const partida = await realizarQuery(
+        `SELECT * FROM Partidas WHERE id_partida = ${data.idPartida}`
+      );
+
+      if (partida.length === 0) {
+        console.error("Partida no encontrada");
+        return;
+      }
+
+      const { barcos_hundidos_j1, barcos_hundidos_j2, id_ganador } = partida[0];
+
+      if (id_ganador) {
+        io.to(data.room).emit("partida_finalizada", {
+          ganador: id_ganador,
+          id1: data.id1,
+          id2: data.id2
+        });
+        return;
+      }
+
+      if (barcos_hundidos_j1 >= barcosNecesarios) {
+        await realizarQuery(
+          `UPDATE Partidas SET id_ganador = ${data.id2} WHERE id_partida = ${data.idPartida}`
+        );
+
+        console.log(`¡Jugador ${data.id2} GANÓ!`);
+
+        io.to(data.room).emit("partida_finalizada", {
+          ganador: data.id2,
+          id1: data.id1,
+          id2: data.id2
+        });
+        return;
+      }
+
+      if (barcos_hundidos_j2 >= barcosNecesarios) {
+        await realizarQuery(
+          `UPDATE Partidas SET id_ganador = ${data.id1} WHERE id_partida = ${data.idPartida}`
+        );
+
+        console.log(`¡Jugador ${data.id1} GANÓ!`);
+
+        io.to(data.room).emit("partida_finalizada", {
+          ganador: data.id1,
+          id1: data.id1,
+          id2: data.id2
+        });
+        return;
+      }
+
+      console.log("Partida continúa:", { barcos_hundidos_j1, barcos_hundidos_j2, necesarios: barcosNecesarios });
+
+    } catch (error) {
+      console.error("Error verificando fin de partida:", error);
+    }
+  });
+
   socket.on('solicitar_imagenes', data => {
     console.log("Solicitando imágenes en room:", data.room);
-    // Emitir a todos en el room EXCEPTO al que envió la solicitud
     socket.to(data.room).emit('reenviar_imagen', { room: data.room });
   });
-  // Opcional: Para salir de una sala
   socket.on('leaveRoom', data => {
     if (data.room) {
       socket.leave(data.room);
@@ -469,14 +792,12 @@ io.on("connection", (socket) => {
   socket.on('disconnect', () => {
     console.log("Usuario desconectado");
 
-    // Remover usuario de jugadoresEnLinea
     if (req.session.user) {
       const index = jugadoresEnLinea.indexOf(req.session.user);
       if (index !== -1) {
         jugadoresEnLinea.splice(index, 1);
       }
 
-      // Emitir la lista actualizada a la sala
       if (req.session.room) {
         io.to(req.session.room).emit('jugadores_en_linea', { jugadores: jugadoresEnLinea });
       }
