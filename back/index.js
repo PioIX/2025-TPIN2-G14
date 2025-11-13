@@ -13,7 +13,7 @@ var port = process.env.PORT || 4000;
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors({
-  origin: ["http://10.1.9.11:3000","http://10.1.9.11:3001","http://10.1.5.147:3000", "http://10.1.5.147:3001", "http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3002", "http://localhost:3003"],
+  origin: ["http://10.1.4.209:3000", "http://10.1.4.209:3001", "http://10.1.5.147:3000", "http://10.1.5.147:3001", "http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3002", "http://localhost:3003"],
   credentials: true
 }));
 
@@ -25,7 +25,7 @@ const server = app.listen(port, () => {
 
 const io = require('socket.io')(server, {
   cors: {
-    origin: ["http://10.1.9.11:3000","http://10.1.9.11:3001","http://10.1.5.147:3000", "http://10.1.5.147:3001", "http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
+    origin: ["http://10.1.4.209:3000", "http://10.1.4.209:3001", "http://10.1.5.147:3000", "http://10.1.5.147:3001", "http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
   }
@@ -265,12 +265,13 @@ app.post('/agregarBarco', async (req, res) => {
 });
 app.get('/traerPuntajes', async (req, res) => {
   try {
-    const respuesta = await realizarQuery(`SELECT id_ganador, COUNT(id_ganador) AS partidas_ganadas
-      FROM Partidas
-      WHERE id_ganador IS NOT NULL
-      GROUP BY id_ganador
-      ORDER BY partidas_ganadas DESC
-      LIMIT 10;`)
+    const respuesta = await realizarQuery(`SELECT p.id_ganador, j.usuario, COUNT(p.id_ganador) AS partidas_ganadas
+    FROM Partidas p
+    INNER JOIN Jugadores j ON p.id_ganador = j.id_jugador
+    WHERE p.id_ganador IS NOT NULL
+    GROUP BY p.id_ganador, j.usuario
+    ORDER BY partidas_ganadas DESC
+`)
     console.log(respuesta.length)
     if (respuesta.length == 0) {
       return res.send({ res: false, message: "error" });
