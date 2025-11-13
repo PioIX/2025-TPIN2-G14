@@ -1,5 +1,5 @@
 const useConnection = () => {
-    const ip = "http://10.1.4.209"
+    const ip = "http://10.1.4.73"
     const port = 4000
     const url = ip + ":" + port
     return {url}

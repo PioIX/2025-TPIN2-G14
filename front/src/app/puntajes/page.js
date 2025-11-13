@@ -89,7 +89,7 @@ export default function Puntajes() {
 
                 {/* Otros pilotos */}
                 <div className={styles.others}>
-                    {puntajes.slice(3).map((puntaje, index) => (
+                    {puntajes.map((puntaje, index) => (
                         <div key={index} className={styles.otherDriver}>
                             <p className={styles.otherDriverName}>{puntaje.usuario}</p>
                             <p className={styles.otherDriverTeam}>
