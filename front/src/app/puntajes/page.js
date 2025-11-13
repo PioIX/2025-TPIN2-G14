@@ -21,12 +21,10 @@ export default function Puntajes() {
                 headers: { "Content-Type": "application/json" },
             });
 
-            // Primero necesitas parsear el JSON
             const data = await response.json();
 
-            // Ahora sí puedes acceder a las propiedades
             if (data.res) {
-                console.log(data.message); // Aquí están los ganadores
+                console.log(data.message); 
                 // Hacer algo con los datos
             } else {
                 alert("No se encontraron puntajes");

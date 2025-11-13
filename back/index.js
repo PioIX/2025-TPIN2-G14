@@ -13,7 +13,7 @@ var port = process.env.PORT || 4000;
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors({
-  origin: ["http://192.168.159.1:3000", "http://192.168.159.1:3001", "http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3002", "http://localhost:3003"],
+  origin: ["http://10.1.5.147:3000", "http://10.1.5.147:3001", "http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3002", "http://localhost:3003"],
   credentials: true
 }));
 
@@ -25,7 +25,7 @@ const server = app.listen(port, () => {
 
 const io = require('socket.io')(server, {
   cors: {
-    origin: ["http://192.168.159.1:3000", "http://192.168.159.1:3001", "http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
+    origin: ["http://10.1.5.147:3000", "http://10.1.5.147:3001", "http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
   }
@@ -43,7 +43,6 @@ io.use((socket, next) => {
   sessionMiddleware(socket.request, {}, next);
 });
 
-//funciona
 app.post('/login', async function login(req, res) {
   try {
     console.log(req.body);
@@ -100,23 +99,6 @@ app.post('/getUsuarios', async function (req, res) {
   }
 })
 
-
-/*app.post('/crearPartida', async function (req, res) {
-  try {
-    console.log(req.body);
-
-    await realizarQuery(`INSERT INTO Partidas (id_ganador, barcos_hundidos_j1, barcos_hundidos_j2) VALUES (NULL, 0, 0)`);
-
-    const idPartida = (await realizarQuery(`SELECT LAST_INSERT_ID() AS idPartida`))[0].idPartida;
-
-    await realizarQuery(`INSERT INTO JugadoresPorPartida (id_partida, id_jugador) SELECT ${idPartida}, j.id_jugador FROM Jugadores j WHERE j.id_jugador IN (${req.body.jugador1}, ${req.body.jugador2})`);
-
-    res.send({ res: true, idPartida: idPartida });
-  } catch (error) {
-    console.error("Error en /crearPartida:", error);
-    res.send({ res: false, message: "Error creando la partida." });
-  }
-});*/
 app.post('/crearPartida', async function (req, res) {
   try {
     console.log("Datos recibidos:", req.body);
@@ -146,67 +128,6 @@ app.post('/crearPartida', async function (req, res) {
   }
 });
 
-/*app.post('/impactosJ1', async (req, res) => {
-  let hundido = false
-  try {
-    const impactos = await realizarQuery(`
-      SELECT longitud, impactos, id_barco 
-      FROM Barcos
-      WHERE id_partida = ${req.body.id_partida} AND id_jugador = ${req.body.id_jugador}`);
-    for (let barco of impactos) {
-      if (barco.impactos === barco.longitud) {
-        console.log(barco.longitud, barco.impactos)
-        const hundir = await realizarQuery(`UPDATE Partidas SET barcos_hundidos_j1 = barcos_hundidos_j1 + 1
-        WHERE id_partida = ${req.body.id_partida}`);
-        hundido = true;
-        console.log("Hay hundidos J1")
-        console.log(hundir)
-      }
-    }
-    if (hundido) {
-      return res.send({ res: true, message: "Barcos hundidos actualizados" });
-    } else {
-      return res.send({ res: false, message: "Todavia no hundio ningun barco" })
-    }
-  } catch (error) {
-    console.log("Error http")
-    return res.send({ res: false, message: "Error al actualizar barcos hundidos" });
-  }
-
-});
-
-app.post('/impactosJ2', async (req, res) => {
-  let hundido = false;
-  try {
-    const impactos = await realizarQuery(`SELECT longitud, impactos, id_barco FROM Barcos
-       WHERE id_partida = ${req.body.id_partida} AND id_jugador = ${req.body.id_jugador}`);
-    console.log("estos son los impactos del J2: " + impactos)
-    for (let barco of impactos) {
-      console.log(barco)
-      if (barco.impactos === barco.longitud) {
-        console.log(barco.longitud, barco.impactos)
-        const hundir = await realizarQuery(`UPDATE Partidas SET barcos_hundidos_j2 = barcos_hundidos_j2 + 1
-          WHERE id_partida = ${req.body.id_partida}`);
-        hundido = true;
-        console.log("Si hay hundidos j2")
-        console.log(hundir)
-      }
-
-    }
-    if (hundido) {
-      return res.send({ res: true, message: "Barcos hundidos actualizados" });
-    } else {
-      return res.send({ res: false, message: "Todavia no hundio ningun barco" })
-    }
-
-  } catch (error) {
-    console.log("Error http")
-    return res.send({ res: false, message: "Error al actualizar barcos hundidos" });
-  }
-
-});*/
-
-//
 app.post('/impactosJ1', async (req, res) => {
   try {
     const barcos = await realizarQuery(`
@@ -387,7 +308,6 @@ app.post('/disparo', async function (req, res) {
       return res.send({ res: true, impacto: false, message: "Agua" });
     }
 
-    // Registrar el impacto
     await realizarQuery(`UPDATE Coordenadas SET impacto = true WHERE id_barco = ${coordenada[0].id_barco} 
       AND coordenada_barco = '${req.body.coordenada}'`);
 
@@ -511,22 +431,6 @@ app.get('/traerBarcos', async function (req, res) {
   }
 });
 
-/*app.post('/traerCoordenadas', async function (req, res) {
-  try {
-    const coordenadas = await realizarQuery(`
-      SELECT Coordenadas.coordenada_barco AS coordenada, Coordenadas.impacto, Coordenadas.id_barco, Barcos.longitud
-      FROM Coordenadas
-      INNER JOIN Barcos ON Coordenadas.id_barco = Barcos.id_barco
-      INNER JOIN JugadoresPorPartida ON JugadoresPorPartida.id_jugador = Barcos.id_jugador
-      WHERE Coordenadas.id_partida = ${req.body.id_partida} AND JugadoresPorPartida.id_jugador = ${req.body.id_jugador}
-      ORDER BY Barcos.id_barco, Coordenadas.coordenada_barco
-    `);
-    res.send({ res: true, coords: coordenadas });
-  } catch (error) {
-    console.error("Error en /traerCoordenadas:", error);
-    res.send({ res: false, message: "Error obteniendo las coordenadas del jugador." });
-  }
-});*/
 app.post('/traerCoordenadas', async function (req, res) {
   try {
     const coordenadas = await realizarQuery(`

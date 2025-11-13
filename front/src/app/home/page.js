@@ -241,7 +241,7 @@ export default function Home() {
         jugador2Id: selectedPlayerId,
         imagen1: selectedImg,
       });
-      setEsperando(2)//ACA ESTOY LABURANDO 
+      setEsperando(2)
       console.log("Informacion enviada a jugador 2");
     }
   }
@@ -312,7 +312,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* === Secciones con imagen de fondo === */}
+      {/*  Secciones*/}
       <section className={styles.section1}>
         <div className={styles.contenedor}>
           <div className={styles.actionsGrid}>
@@ -346,7 +346,7 @@ export default function Home() {
                                 </option>
                               );
                             }
-                            return null; // Es importante retornar algo cuando no cumple la condición
+                            return null; 
                           })
                         ) : (
                           <option className={styles.option}>No hay jugadores en línea</option>

@@ -1,9 +1,9 @@
 .msj {
   width: 21rem;
-  height: 44px;            /* 4vh puede variar entre pantallas; fijo 44px */
+  height: 44px;       
   padding: 0.65rem 0.85rem;
-  margin-top: 0.35rem;     /* más sutil */
-  margin-right: 0;         /* que ocupe todo el ancho */
+  margin-top: 0.35rem;    
+  margin-right: 0;         
   border-radius: 12px;
   border: 1.5px solid rgba(255, 255, 255, 0.35);
   background: rgba(255, 255, 255, 0.15);
