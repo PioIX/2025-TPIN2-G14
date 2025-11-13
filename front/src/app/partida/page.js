@@ -82,9 +82,13 @@ export default function pagina() {
     const [barcosListosContrincante, setBarcosListosContricante] = useState(1);
     const [partidaTerminada, setPartidaTerminada] = useState(1);
     const [misCoordenovich, setMisCoordenovich] = useState([]);
-    const [mensajeImpacto, setMensajeImpacto] = useState("");
+    const [mensajeImpacto, setMensajeImpacto] = useState(""); // 1
     const [mostrarPopup, setMostrarPopup] = useState(false);
-    const [mensajeConfirmar, setMensajeConfirmar] = useState("")
+    const [mensajeConfirmar, setMensajeConfirmar] = useState("");// 2
+    const [mensajeFin, setMensajeFin] = useState("");//3
+    const [mensajeCasillas, setMensajeCasillas] = useState("");//4
+    const [condicion, setCondicion] = useState(0);// 0 nada 1 impacto 2 barcos listos 3 fin partida 4 casillas deben ser contiguas 
+    const [mensajePopup, setMensajePopup] = useState("");
     const router = useRouter()
     let mensajeAtaca = "";
 
@@ -166,7 +170,12 @@ export default function pagina() {
                 const mensaje = data.impactado
                     ? `¡Te impactaron en ${data.casilla}!`
                     : `Fallaron en ${data.casilla} (agua)`;
-                setMensajeImpacto(mensaje);
+                setMensajePopup(mensaje);
+                if (data.impactado) {
+                    setCondicion(4);
+                } else {
+                    setCondicion(5);
+                }
                 setMostrarPopup(true);
 
                 const btn = document.getElementById(data.casilla);
@@ -226,19 +235,22 @@ export default function pagina() {
             console.log("¡PARTIDA FINALIZADA!", data);
 
             if (Number(data.ganador) === Number(idLogged)) {
-              //hay que agregar un seter para un popup
-                alert("¡GANASTE!");
+                //hay que agregar un seter para un popup
+                setMensajePopup("Felicidades! Ganaste la partida!");
+                setCondicion(2);
+                setMostrarPopup(true);
+
                 setPartidaTerminada(2);
                 setTimeout(() => {
-                    router.push(`/bienvenida`);
-                }, 2000);
+                    router.push(`/puntajes`);
+                }, 5000);
             } else {
-              //hay que agregar un seter para un popup
-                alert("Perdiste");
-                setPartidaTerminada(3);
+                //hay que agregar un seter para un popup
+                setMostrarPopup(true)
+                setCondicion(3);
                 setTimeout(() => {
-                    router.push(`/bienvenida`);
-                }, 2000);
+                    router.push(`/puntajes`);
+                }, 5000);
             }
         };
 
@@ -280,7 +292,10 @@ export default function pagina() {
                 const orientacionDetectada = detectarOrientacion(coordenadasSeleccionadas);
 
                 if (!orientacionDetectada) {
-                    alert("Las casillas deben ser contiguas en línea recta (horizontal o vertical)");
+
+                    setMensajePopup("Las casillas deben ser contiguas en línea recta (horizontal o vertical)");
+                    setCondicion(0);
+                    setMostrarPopup(true);
                     coordenadasSeleccionadas.forEach(coord => {
                         const btn = document.getElementById(coord);
                         if (btn) {
@@ -296,7 +311,10 @@ export default function pagina() {
                 const sonContiguas = validarCasillasContiguas(coordenadasSeleccionadas, orientacionDetectada);
 
                 if (!sonContiguas) {
-                    alert("Las casillas deben ser consecutivas sin espacios");
+                    setMensajePopup("Las casillas deben ser consecutivas sin espacios");
+                    setCondicion(0);
+                    setMostrarPopup(true);
+
                     coordenadasSeleccionadas.forEach(coord => {
                         const btn = document.getElementById(coord);
                         if (btn) {
@@ -388,12 +406,16 @@ export default function pagina() {
 
     async function obtenerCasillaEnemy(e) {
         if (partidaIniciada === false) {
-            alert("Espera a que el otro jugador coloque sus barcos")
+            setMensajePopup("Espera a que el otro jugador coloque sus barcos");
+            setCondicion(0);
+            setMostrarPopup(true);
             return;
         }
 
         if (Number(miTurno) !== Number(idLogged)) {
-            alert("No es tu turno")
+            setMensajePopup("No es tu turno")
+            setCondicion(0);
+            setMostrarPopup(true);
             return;
         }
 
@@ -477,7 +499,8 @@ export default function pagina() {
     }
     async function confirmar() {
         if (barcosColocados.length != barcosInfo.length) {
-            alert(`Poné los ${barcosInfo.length} barcos primero`);
+            setMensajePopup(`Poné los ${barcosInfo.length} barcos primero`);
+            setMostrarPopup(true)
             return;
         }
         setBarcosListos(2);
@@ -540,8 +563,8 @@ export default function pagina() {
                     });
 
                     setConfirmado(true);
+                    setMensajePopup("Barcos guardados con éxito");
                     setMostrarPopup(true)
-                    setMensajeConfirmar("Barcos guardados con éxito");
                 } else {
                     alert("Error al obtener las coordenadas");
                 }
@@ -588,7 +611,7 @@ export default function pagina() {
                 console.log("mis coordenovich: ", misCoordenovich)
                 //alert("Coordenadas traídas con éxito");
             } else {
-                alert("No se pudieron traer las coordenadas");
+                //alert("No se pudieron traer las coordenadas");
             }
         } catch (error) {
             console.error("Error en /traerCoordenadas:", error);
@@ -1001,32 +1024,34 @@ export default function pagina() {
                         </div>
                     </div>
                 </div>
-                {partidaTerminada === 2 && (
-                    <PopUp>
-                        <div>¡Felicidades! ¡Ganaste la partida!</div>
-                    </PopUp>
-                )}
-                {partidaTerminada === 3 && (
-                    <PopUp>
-                        <div>¡Perdiste! El oponente hundió todos tus barcos primero.</div>
-                    </PopUp>
-                )}
-                {}
                 <PopUp
                     open={mostrarPopup}
                     tipo={null}
                     onClose={() => {
                         setMostrarPopup(false);
                     }}
-                >{mensajeImpacto}
-                </PopUp>
-                <PopUp
-                    open={mostrarPopup}
-                    tipo={null}
-                    onClose={() => {
-                        setMostrarPopup(false);
-                    }}
-                >{mensajeConfirmar}
+                >
+                    <div className={styles.popUpJuego}>
+                        {condicion === 2 ? (
+                            <div>
+                                <img src="/imagenes/calamardab.png" />
+                            </div>
+                        ) : condicion === 3 ? (
+                            <div>
+                                <img src="/imagenes/bobperdiste.png" />
+                            </div>
+                        ) : condicion === 4 ? (
+                            <div>
+                                <img src="/imagenes/bobimpacto.png" />
+                            </div>
+                        ) : condicion === 5 ? (
+                            <div>
+                                <img src="/imagenes/bobagua.png" />
+                            </div>
+                        ) : null}
+                        <div>{mensajePopup}</div>
+                    </div>
+
                 </PopUp>
 
             </section>
