@@ -170,7 +170,6 @@ export default function pagina() {
     if (!socket || !isConnected || !idLogged) return;
 
     if (contadorDispara > 0) {
-
       socket.emit("verificar_fin_partida", {
         room: idPartida,
         idPartida: idPartida,
@@ -180,7 +179,7 @@ export default function pagina() {
       });
     }
   }, [contadorDispara]);
-  async function terminarPartida(){
+  async function terminarPartida() {
     let info = {
       id_partida: idPartida,
       id1: id1,
@@ -196,11 +195,11 @@ export default function pagina() {
     const data = await response.json();
 
     console.log(data)
-    if(data.res){
+    if (data.res) {
       console.log("partida terminada correctamente")
       console.log("ganador: ", data.ganador)
 
-    }else{
+    } else {
       console.log("no se termino la partida")
     }
   }
@@ -222,7 +221,7 @@ export default function pagina() {
 
     socket.on("partida_finalizada", handlePartidaFinalizada);
   }, []);*/
-
+//seleccionar tus barcos
   function obtenerCasilla(e) {
     const id = e.target.id;
     if (coordenadasSeleccionadas.length == 0) {
@@ -246,6 +245,7 @@ export default function pagina() {
 
     return null;
   }
+  //iniciar partida
   useEffect(() => {
     if (!socket || !isConnected || !idLogged) return;
 
@@ -261,7 +261,7 @@ export default function pagina() {
       socket.off("partida_iniciada", handlePartidaIniciada);
     };
   }, [socket, isConnected, idLogged, idPartida]);
-
+//recibir dificultad
   useEffect(() => {
     if (!socket || !isConnected || !idLogged) return;
 
@@ -276,7 +276,7 @@ export default function pagina() {
       socket.off("recibir_dificultad");
     };
   }, [socket, isConnected, idLogged]);
-
+//recibir disparos
   useEffect(() => {
     if (!socket || !isConnected || !idLogged) return;
 
@@ -297,7 +297,7 @@ export default function pagina() {
         }
 
         if (data.impactado) {
-          //setContadorDispara((prev) => prev + 1);
+          setContadorDispara((prev) => prev + 1);
           setTimeout(async () => {
             await chequearDisparos("recibí impacto");
 
@@ -330,7 +330,7 @@ export default function pagina() {
       socket.off("recibir_disparo", handleRecibirDisparo);
     };
   }, [socket, isConnected, idLogged]);
-
+//recibir listo
   useEffect(() => {
     if (!socket || !isConnected || !idLogged) return;
     socket.on("recibir_listo", (data) => {
@@ -339,7 +339,7 @@ export default function pagina() {
       }
     });
   }, [socket, isConnected, idLogged]);
-
+//socket on terminar partida
   useEffect(() => {
     if (!socket || !isConnected || !idLogged) return;
 
@@ -349,15 +349,15 @@ export default function pagina() {
       if (Number(data.ganador) === Number(idLogged)) {
         alert("¡GANASTE!");
         setPartidaTerminada(2);
-        setTimeout(() => {
+        /*setTimeout(() => {
           router.push(`/bienvenida`);
-        }, 2000);
+        }, 2000);*/
       } else {
         alert("Perdiste");
         setPartidaTerminada(3);
-        setTimeout(() => {
+        /*setTimeout(() => {
           router.push(`/bienvenida`);
-        }, 2000);
+        }, 2000);*/
       }
     };
 
@@ -366,7 +366,7 @@ export default function pagina() {
     return () => {
       socket.off("partida_finalizada", handlePartidaFinalizada);
     };
-  }, [socket, isConnected, idLogged, router]);
+  }, [socket, isConnected, idLogged]);
 
   //turnos
   useEffect(() => {
@@ -526,7 +526,7 @@ export default function pagina() {
       }
     }
   }, [selectedBarcoId]);
-
+//atacar
   async function obtenerCasillaEnemy(e) {
     if (partidaIniciada === false) {
       alert("Espera a que el otro jugador coloque sus barcos");
@@ -706,7 +706,7 @@ export default function pagina() {
   } else {
     mensajeAtaca = "Turno Rival";
   }
-
+//creo que no lo uso pero no estoy segura
   async function coords() {
     try {
       const response = await fetch(url + "/traerCoordenadas", {
@@ -759,7 +759,7 @@ export default function pagina() {
 
           if (data.res) {
             console.log("Impactos obtenidos:", data.impactos);
-            setContadorDispara((prev) => prev + 1);
+            //setContadorDispara((prev) => prev + 1);
           } else {
             console.log("Error al llamar /impactos:");
           }
@@ -788,7 +788,7 @@ export default function pagina() {
 
           if (data.res) {
             console.log("Impactos obtenidos:", data.impactos);
-            setContadorDispara((prev) => prev + 1);
+            //setContadorDispara((prev) => prev + 1);
           } else {
             console.log("Error al llamar /impactos:");
           }
@@ -1195,11 +1195,10 @@ export default function pagina() {
             return (
               <button
                 className={`
-                    ${
-                      selectedBarcoId === index
-                        ? styles.botonBarcoSeleccionado
-                        : styles.botonBarco
-                    }
+                    ${selectedBarcoId === index
+                    ? styles.botonBarcoSeleccionado
+                    : styles.botonBarco
+                  }
                     ${barcoYaColocado ? styles.barcoUtilizado : ""}
                 `}
                 key={index}
