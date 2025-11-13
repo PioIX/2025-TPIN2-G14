@@ -82,6 +82,9 @@ export default function pagina() {
     const [barcosListosContrincante, setBarcosListosContricante] = useState(1);
     const [partidaTerminada, setPartidaTerminada] = useState(1);
     const [misCoordenovich, setMisCoordenovich] = useState([]);
+    const [mensajeImpacto, setMensajeImpacto] = useState("");
+    const [mostrarPopup, setMostrarPopup] = useState(false);
+    const [mensajeConfirmar, setMensajeConfirmar] = useState("")
     const router = useRouter()
     let mensajeAtaca = "";
 
@@ -163,7 +166,8 @@ export default function pagina() {
                 const mensaje = data.impactado
                     ? `¡Te impactaron en ${data.casilla}!`
                     : `Fallaron en ${data.casilla} (agua)`;
-                alert(mensaje);
+                setMensajeImpacto(mensaje);
+                setMostrarPopup(true);
 
                 const btn = document.getElementById(data.casilla);
                 if (btn) {
@@ -185,7 +189,7 @@ export default function pagina() {
                             id2: id2,
                             dificultad: dificultad
                         });
-                    }, 1200); 
+                    }, 1200);
                 }
             }
 
@@ -534,7 +538,8 @@ export default function pagina() {
                     });
 
                     setConfirmado(true);
-                    alert("Barcos guardados con éxito");
+                    setMostrarPopup(true)
+                    setMensajeConfirmar("Barcos guardados con éxito");
                 } else {
                     alert("Error al obtener las coordenadas");
                 }
@@ -579,13 +584,13 @@ export default function pagina() {
                     setMisCoordenovich(prev => [...prev, coord.coordenada]);
                 })
                 console.log("mis coordenovich: ", misCoordenovich)
-                alert("Coordenadas traídas con éxito");
+                //alert("Coordenadas traídas con éxito");
             } else {
                 alert("No se pudieron traer las coordenadas");
             }
         } catch (error) {
             console.error("Error en /traerCoordenadas:", error);
-            alert("Error al conectar con el servidor");
+            //alert("Error al conectar con el servidor");
         }
     }
     async function chequearDisparos(texto) {
@@ -1004,6 +1009,24 @@ export default function pagina() {
                         <div>¡Perdiste! El oponente hundió todos tus barcos primero.</div>
                     </PopUp>
                 )}
+                {}
+                <PopUp
+                    open={mostrarPopup}
+                    tipo={null}
+                    onClose={() => {
+                        setMostrarPopup(false);
+                    }}
+                >{mensajeImpacto}
+                </PopUp>
+                <PopUp
+                    open={mostrarPopup}
+                    tipo={null}
+                    onClose={() => {
+                        setMostrarPopup(false);
+                    }}
+                >{mensajeConfirmar}
+                </PopUp>
+
             </section>
         </>
     )
