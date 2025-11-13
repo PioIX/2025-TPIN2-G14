@@ -166,7 +166,7 @@ export default function pagina() {
   const router = useRouter();
   let mensajeAtaca = "";
 
-  useEffect(() => {
+  /*useEffect(() => {
     if (!socket || !isConnected || !idLogged) return;
 
     if (contadorDispara > 0) {
@@ -178,7 +178,7 @@ export default function pagina() {
         dificultad: dificultad,
       });
     }
-  }, [contadorDispara]);
+  }, [contadorDispara]);*/
   async function terminarPartida() {
     let info = {
       id_partida: idPartida,
@@ -221,7 +221,7 @@ export default function pagina() {
 
     socket.on("partida_finalizada", handlePartidaFinalizada);
   }, []);*/
-//seleccionar tus barcos
+  //seleccionar tus barcos
   function obtenerCasilla(e) {
     const id = e.target.id;
     if (coordenadasSeleccionadas.length == 0) {
@@ -261,7 +261,7 @@ export default function pagina() {
       socket.off("partida_iniciada", handlePartidaIniciada);
     };
   }, [socket, isConnected, idLogged, idPartida]);
-//recibir dificultad
+  //recibir dificultad
   useEffect(() => {
     if (!socket || !isConnected || !idLogged) return;
 
@@ -276,8 +276,8 @@ export default function pagina() {
       socket.off("recibir_dificultad");
     };
   }, [socket, isConnected, idLogged]);
-//recibir disparos
-  useEffect(() => {
+  //recibir disparos
+  /*useEffect(() => {
     if (!socket || !isConnected || !idLogged) return;
 
     const handleRecibirDisparo = async (data) => {
@@ -309,7 +309,49 @@ export default function pagina() {
               id1: id1,
               id2: id2,
               dificultad: dificultad,
-            }); */
+            }); 
+          }, 1200);
+        }
+      }
+
+      if (data.emisor == Number(idLogged)) {
+        const btnEnemy = document.getElementById(`e-${data.casilla}`);
+        if (btnEnemy) {
+          const cellEnemy = btnEnemy.parentElement;
+          cellEnemy.style.backgroundColor = data.impactado ? "red" : "blue";
+          btnEnemy.disabled = true;
+        }
+      }
+    };
+
+    socket.on("recibir_disparo", handleRecibirDisparo);
+
+    return () => {
+      socket.off("recibir_disparo", handleRecibirDisparo);
+    };
+  }, [socket, isConnected, idLogged]);*/
+  useEffect(() => {
+    if (!socket || !isConnected || !idLogged) return;
+
+    const handleRecibirDisparo = async (data) => {
+      console.log("📨 Disparo recibido:", data);
+
+      if (data.receptor == Number(idLogged)) {
+        const mensaje = data.impactado
+          ? `¡Te impactaron en ${data.casilla}!`
+          : `Fallaron en ${data.casilla} (agua)`;
+        alert(mensaje);
+
+        const btn = document.getElementById(data.casilla);
+        if (btn) {
+          const cell = btn.parentElement;
+          cell.style.backgroundColor = data.impactado ? "red" : "blue";
+          btn.disabled = true;
+        }
+
+        if (data.impactado) {
+          setTimeout(async () => {
+            await chequearDisparos("recibí impacto");
           }, 1200);
         }
       }
@@ -330,7 +372,7 @@ export default function pagina() {
       socket.off("recibir_disparo", handleRecibirDisparo);
     };
   }, [socket, isConnected, idLogged]);
-//recibir listo
+  //recibir listo
   useEffect(() => {
     if (!socket || !isConnected || !idLogged) return;
     socket.on("recibir_listo", (data) => {
@@ -339,7 +381,8 @@ export default function pagina() {
       }
     });
   }, [socket, isConnected, idLogged]);
-//socket on terminar partida
+  //socket on terminar partida
+  // Socket on terminar partida
   useEffect(() => {
     if (!socket || !isConnected || !idLogged) return;
 
@@ -349,15 +392,9 @@ export default function pagina() {
       if (Number(data.ganador) === Number(idLogged)) {
         alert("¡GANASTE!");
         setPartidaTerminada(2);
-        /*setTimeout(() => {
-          router.push(`/bienvenida`);
-        }, 2000);*/
       } else {
         alert("Perdiste");
         setPartidaTerminada(3);
-        /*setTimeout(() => {
-          router.push(`/bienvenida`);
-        }, 2000);*/
       }
     };
 
@@ -526,7 +563,7 @@ export default function pagina() {
       }
     }
   }, [selectedBarcoId]);
-//atacar
+  //atacar
   async function obtenerCasillaEnemy(e) {
     if (partidaIniciada === false) {
       alert("Espera a que el otro jugador coloque sus barcos");
@@ -568,7 +605,7 @@ export default function pagina() {
         setTimeout(async () => {
           await chequearDisparos("después del disparo");
 
-          await new Promise((resolve) => setTimeout(resolve, 500));
+          //await new Promise((resolve) => setTimeout(resolve, 500));
 
           /* socket.emit("verificar_fin_partida", {
             room: idPartida,
@@ -706,7 +743,7 @@ export default function pagina() {
   } else {
     mensajeAtaca = "Turno Rival";
   }
-//creo que no lo uso pero no estoy segura
+  //creo que no lo uso pero no estoy segura
   async function coords() {
     try {
       const response = await fetch(url + "/traerCoordenadas", {
@@ -737,6 +774,7 @@ export default function pagina() {
       alert("Error al conectar con el servidor");
     }
   }
+  /*voy a probar algo que dijo claude comento lo mio 13-11 
   async function chequearDisparos(texto) {
     console.log(texto);
     if (Number(id1) === Number(idLogged)) {
@@ -797,6 +835,74 @@ export default function pagina() {
         }
       }
       probarImpactos2();
+    }
+  }*/
+  async function chequearDisparos(texto) {
+    console.log(texto);
+    if (Number(id1) === Number(idLogged)) {
+      console.log("CHEQUEAR DISPARO JUGADOR 1");
+
+      try {
+        let info = {
+          id_jugador: idLogged,
+          id_partida: idPartida,
+          dificultad: dificultad,
+          id1: id1,
+          id2: id2
+        };
+        const response = await fetch(url + "/impactosJ1", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(info),
+        });
+
+        const data = await response.json();
+        console.log("Respuesta de /impactos:", data);
+
+        // Si hay fin de partida, notificar por socket
+        if (data.finPartida && !data.finPartida.yaTerminada) {
+          socket.emit("notificar_fin_partida", {
+            room: idPartida,
+            ganador: data.finPartida.ganador,
+            id1: id1,
+            id2: id2
+          });
+        }
+      } catch (error) {
+        console.log("Error al llamar /impactos:", error);
+      }
+    } else {
+      console.log("CHEQUEAR DISPARO JUGADOR 2");
+
+      try {
+        let info = {
+          id_jugador: idLogged,
+          id_partida: idPartida,
+          dificultad: dificultad,
+          id1: id1,
+          id2: id2
+        };
+        const response = await fetch(url + "/impactosJ2", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(info),
+        });
+
+        const data = await response.json();
+        console.log("Respuesta de /impactos:", data);
+
+        // Si hay fin de partida, notificar por socket
+        if (data.finPartida && !data.finPartida.yaTerminada) {
+          socket.emit("notificar_fin_partida", {
+            room: idPartida,
+            ganador: data.finPartida.ganador,
+            id1: id1,
+            id2: id2
+          });
+        }
+      } catch (error) {
+        console.log("Error al llamar /impactos:", error);
+      }
     }
   }
 

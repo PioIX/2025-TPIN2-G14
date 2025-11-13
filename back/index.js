@@ -13,7 +13,7 @@ var port = process.env.PORT || 4000;
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors({
-  origin: ["http://10.1.4.209:3000", "http://10.1.4.209:3001", "http://10.1.5.147:3000", "http://10.1.5.147:3001", "http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3002", "http://localhost:3003"],
+  origin: ["http://10.1.9.11:3000", "http://10.1.9.11:3001", "http://10.1.4.209:3000", "http://10.1.4.209:3001", "http://10.1.5.147:3000", "http://10.1.5.147:3001", "http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3002", "http://localhost:3003"],
   credentials: true
 }));
 
@@ -25,7 +25,7 @@ const server = app.listen(port, () => {
 
 const io = require('socket.io')(server, {
   cors: {
-    origin: ["http://10.1.4.209:3000", "http://10.1.4.209:3001", "http://10.1.5.147:3000", "http://10.1.5.147:3001", "http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
+    origin: ["http://10.1.9.11:3000", "http://10.1.9.11:3001", "http://10.1.4.209:3000", "http://10.1.4.209:3001", "http://10.1.5.147:3000", "http://10.1.5.147:3001", "http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
   }
@@ -127,7 +127,7 @@ app.post('/crearPartida', async function (req, res) {
     res.send({ res: false, message: "Error creando la partida: " + error.message });
   }
 });
-
+/*probando lo que me dijo c laude comenton lo mio
 app.post('/impactosJ1', async (req, res) => {
   try {
     const barcos = await realizarQuery(`
@@ -228,7 +228,190 @@ app.post('/impactosJ2', async (req, res) => {
       message: "Error al actualizar barcos hundidos"
     });
   }
+});*/
+// Función auxiliar que solo verifica y retorna el resultado
+async function verificarFinPartida(idPartida, dificultad, id1, id2) {
+  try {
+    const barcosSegunDificultad = {
+      normal: 5,
+      intermedio: 3,
+      avanzado: 2
+    };
+
+    const barcosNecesarios = barcosSegunDificultad[dificultad];
+
+    const partida = await realizarQuery(
+      `SELECT * FROM Partidas WHERE id_partida = ${idPartida}`
+    );
+
+    if (partida.length === 0) {
+      console.error("Partida no encontrada");
+      return null;
+    }
+
+    const { barcos_hundidos_j1, barcos_hundidos_j2, id_ganador } = partida[0];
+
+    // Si ya hay ganador, retornar ese ganador
+    if (id_ganador) {
+      return { ganador: id_ganador, yaTerminada: true };
+    }
+
+    // Verificar si J2 ganó (hundió todos los barcos de J1)
+    if (barcos_hundidos_j1 >= barcosNecesarios) {
+      await realizarQuery(
+        `UPDATE Partidas SET id_ganador = ${id2} WHERE id_partida = ${idPartida}`
+      );
+
+      console.log(`¡Jugador ${id2} GANÓ!`);
+      return { ganador: id2, yaTerminada: false };
+    }
+
+    // Verificar si J1 ganó (hundió todos los barcos de J2)
+    if (barcos_hundidos_j2 >= barcosNecesarios) {
+      await realizarQuery(
+        `UPDATE Partidas SET id_ganador = ${id1} WHERE id_partida = ${idPartida}`
+      );
+
+      console.log(`¡Jugador ${id1} GANÓ!`);
+      return { ganador: id1, yaTerminada: false };
+    }
+
+    console.log("Partida continúa:", { barcos_hundidos_j1, barcos_hundidos_j2, necesarios: barcosNecesarios });
+    return null; // No hay ganador todavía
+
+  } catch (error) {
+    console.error("Error verificando fin de partida:", error);
+    return null;
+  }
+}
+
+app.post('/impactosJ1', async (req, res) => {
+  try {
+    const barcos = await realizarQuery(`
+      SELECT longitud, impactos, id_barco, hundido
+      FROM Barcos
+      WHERE id_partida = ${req.body.id_partida} 
+      AND id_jugador = ${req.body.id_jugador}
+    `);
+
+    let barcosHundidosNuevos = 0;
+
+    for (let barco of barcos) {
+      if (barco.impactos === barco.longitud && !barco.hundido) {
+        await realizarQuery(`
+          UPDATE Barcos 
+          SET hundido = true 
+          WHERE id_barco = ${barco.id_barco}
+        `);
+
+        barcosHundidosNuevos++;
+        console.log(`Barco ${barco.id_barco} hundido!`);
+      }
+    }
+
+    if (barcosHundidosNuevos > 0) {
+      await realizarQuery(`
+        UPDATE Partidas 
+        SET barcos_hundidos_j1 = barcos_hundidos_j1 + ${barcosHundidosNuevos}
+        WHERE id_partida = ${req.body.id_partida}
+      `);
+
+      // Verificar fin de partida
+      const resultado = await verificarFinPartida(
+        req.body.id_partida,
+        req.body.dificultad,
+        req.body.id1,
+        req.body.id2
+      );
+
+      return res.send({
+        res: true,
+        message: `${barcosHundidosNuevos} barco(s) hundido(s)`,
+        finPartida: resultado // Enviar el resultado al frontend
+      });
+    }
+
+    return res.send({
+      res: false,
+      message: "Todavía no hundió ningún barco nuevo",
+      finPartida: null
+    });
+
+  } catch (error) {
+    console.error("Error en /impactosJ1:", error);
+    return res.send({
+      res: false,
+      message: "Error al actualizar barcos hundidos",
+      finPartida: null
+    });
+  }
 });
+
+app.post('/impactosJ2', async (req, res) => {
+  try {
+    const barcos = await realizarQuery(`
+      SELECT longitud, impactos, id_barco, hundido
+      FROM Barcos
+      WHERE id_partida = ${req.body.id_partida} 
+      AND id_jugador = ${req.body.id_jugador}
+    `);
+
+    let barcosHundidosNuevos = 0;
+
+    for (let barco of barcos) {
+      if (barco.impactos === barco.longitud && !barco.hundido) {
+        await realizarQuery(`
+          UPDATE Barcos 
+          SET hundido = true 
+          WHERE id_barco = ${barco.id_barco}
+        `);
+
+        barcosHundidosNuevos++;
+        console.log(`Barco ${barco.id_barco} hundido!`);
+      }
+    }
+
+    if (barcosHundidosNuevos > 0) {
+      await realizarQuery(`
+        UPDATE Partidas 
+        SET barcos_hundidos_j2 = barcos_hundidos_j2 + ${barcosHundidosNuevos}
+        WHERE id_partida = ${req.body.id_partida}
+      `);
+
+      // Verificar fin de partida
+      const resultado = await verificarFinPartida(
+        req.body.id_partida,
+        req.body.dificultad,
+        req.body.id1,
+        req.body.id2
+      );
+
+      return res.send({
+        res: true,
+        message: `${barcosHundidosNuevos} barco(s) hundido(s)`,
+        finPartida: resultado // Enviar el resultado al frontend
+      });
+    }
+
+    return res.send({
+      res: false,
+      message: "Todavía no hundió ningún barco nuevo",
+      finPartida: null
+    });
+
+  } catch (error) {
+    console.error("Error en /impactosJ2:", error);
+    return res.send({
+      res: false,
+      message: "Error al actualizar barcos hundidos",
+      finPartida: null
+    });
+  }
+});
+
+// Dentro de io.on("connection", (socket) => { ... })
+// AGREGAR ESTE NUEVO EVENTO:
+
 
 app.post('/agregarBarco', async (req, res) => {
   try {
@@ -504,6 +687,17 @@ io.on("connection", (socket) => {
 
     req.session.save();
   })
+  //claude probando 13-11
+  socket.on("notificar_fin_partida", async (data) => {
+    console.log("Notificando fin de partida:", data);
+
+    // Emitir a todos en la sala
+    io.to(data.room).emit("partida_finalizada", {
+      ganador: data.ganador,
+      id1: data.id1,
+      id2: data.id2
+    });
+  });
   socket.on('nuevaPartida', async data => {
     console.log("jugador emisor: " + data.jugador1);
     console.log("jugador receptor: " + data.jugador2);
