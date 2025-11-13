@@ -170,6 +170,7 @@ export default function pagina() {
     if (!socket || !isConnected || !idLogged) return;
 
     if (contadorDispara > 0) {
+
       socket.emit("verificar_fin_partida", {
         room: idPartida,
         idPartida: idPartida,
@@ -179,7 +180,30 @@ export default function pagina() {
       });
     }
   }, [contadorDispara]);
+  async function terminarPartida(){
+    let info = {
+      id_partida: idPartida,
+      id1: id1,
+      id2: id2,
+      dificultad: dificultad
 
+    }
+    const response = await fetch(url + "/terminarPartida", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(info)
+    })
+    const data = await response.json();
+
+    console.log(data)
+    if(data.res){
+      console.log("partida terminada correctamente")
+      console.log("ganador: ", data.ganador)
+
+    }else{
+      console.log("no se termino la partida")
+    }
+  }
   const seleccionarDificultad = (nivel) => {
     setDificultad(nivel);
     setBarcosInfo(configuracionesBarcos[nivel]);
@@ -193,11 +217,11 @@ export default function pagina() {
     }
   };
 
-  useEffect(() => {
+  /*useEffect(() => {
     if (!socket || !isConnected || !idLogged) return;
 
     socket.on("partida_finalizada", handlePartidaFinalizada);
-  }, []);
+  }, []);*/
 
   function obtenerCasilla(e) {
     const id = e.target.id;
@@ -273,7 +297,7 @@ export default function pagina() {
         }
 
         if (data.impactado) {
-          setContadorDispara((prev) => prev + 1);
+          //setContadorDispara((prev) => prev + 1);
           setTimeout(async () => {
             await chequearDisparos("recibí impacto");
 
@@ -337,7 +361,7 @@ export default function pagina() {
       }
     };
 
-    // socket.on("partida_finalizada", handlePartidaFinalizada);
+    socket.on("partida_finalizada", handlePartidaFinalizada);
 
     return () => {
       socket.off("partida_finalizada", handlePartidaFinalizada);
@@ -735,6 +759,7 @@ export default function pagina() {
 
           if (data.res) {
             console.log("Impactos obtenidos:", data.impactos);
+            setContadorDispara((prev) => prev + 1);
           } else {
             console.log("Error al llamar /impactos:");
           }
@@ -763,6 +788,7 @@ export default function pagina() {
 
           if (data.res) {
             console.log("Impactos obtenidos:", data.impactos);
+            setContadorDispara((prev) => prev + 1);
           } else {
             console.log("Error al llamar /impactos:");
           }

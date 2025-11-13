@@ -13,7 +13,7 @@ var port = process.env.PORT || 4000;
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors({
-  origin: ["http://10.1.5.147:3000", "http://10.1.5.147:3001", "http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3002", "http://localhost:3003"],
+  origin: ["http://10.1.9.11:3000","http://10.1.9.11:3001","http://10.1.5.147:3000", "http://10.1.5.147:3001", "http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3002", "http://localhost:3003"],
   credentials: true
 }));
 
@@ -25,7 +25,7 @@ const server = app.listen(port, () => {
 
 const io = require('socket.io')(server, {
   cors: {
-    origin: ["http://10.1.5.147:3000", "http://10.1.5.147:3001", "http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
+    origin: ["http://10.1.9.11:3000","http://10.1.9.11:3001","http://10.1.5.147:3000", "http://10.1.5.147:3001", "http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://10.1.5.133:3000", "http://10.1.5.133:3001", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
   }
@@ -320,7 +320,7 @@ app.post('/disparo', async function (req, res) {
     res.send({ res: false, message: "Error al procesar el disparo." });
   }
 });
-
+//corregido
 app.put('/terminarPartida', async function (req, res) {
   try {
     const barcosSegunDificultad = {
@@ -329,7 +329,7 @@ app.put('/terminarPartida', async function (req, res) {
       avanzado: 2
     };
 
-    const barcosNecesarios = barcosSegunDificultad[req.body.dificultad];
+    const barcosNecesarios = barcosSegunDificultad.req.body.dificultad;
     console.log("Verificando fin de partida:", req.body);
 
     const partida = await realizarQuery(
@@ -342,19 +342,20 @@ app.put('/terminarPartida', async function (req, res) {
 
     const { barcos_hundidos_j1, barcos_hundidos_j2, id_ganador } = partida[0];
 
-    if (id_ganador) {
+    /*if (id_ganador) {
       return res.send({
         res: true,
         ganador: id_ganador,
         message: "Partida ya finalizada"
       });
-    }
+    }*/
 
     if (barcos_hundidos_j1 >= barcosNecesarios) {
       await realizarQuery(
         `UPDATE Partidas SET id_ganador = ${req.body.id2} 
          WHERE id_partida = ${req.body.id_partida}`
       );
+      console.log("Ganó Jugador 2");
       return res.send({
         res: true,
         ganador: req.body.id2,
@@ -367,6 +368,7 @@ app.put('/terminarPartida', async function (req, res) {
         `UPDATE Partidas SET id_ganador = ${req.body.id1} 
          WHERE id_partida = ${req.body.id_partida}`
       );
+      console.log("Ganó Jugador 1");
       return res.send({
         res: true,
         ganador: req.body.id1,
