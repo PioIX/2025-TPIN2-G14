@@ -226,12 +226,14 @@ export default function pagina() {
             console.log("¡PARTIDA FINALIZADA!", data);
 
             if (Number(data.ganador) === Number(idLogged)) {
+              //hay que agregar un seter para un popup
                 alert("¡GANASTE!");
                 setPartidaTerminada(2);
                 setTimeout(() => {
                     router.push(`/bienvenida`);
                 }, 2000);
             } else {
+              //hay que agregar un seter para un popup
                 alert("Perdiste");
                 setPartidaTerminada(3);
                 setTimeout(() => {
