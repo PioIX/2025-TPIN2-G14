@@ -3,31 +3,29 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import styles from "@/app/puntajes/page.module.css";
-
+import { useConnection } from "../hooks/useConnection";
 
 export default function Puntajes() {
-    const [puntajes, setPuntajes] = useState(null);
+    const [puntajes, setPuntajes] = useState([]);
     const router = useRouter();
-    const irAOtraPagina = () => {
-        router.back();
-    };
-    useEffect(()=>{
-        traer();
-    })
-    async function traer() {
+    const { url } = useConnection();
+
+    useEffect(() => {
+        traerPuntajes();
+    }, []);
+
+    async function traerPuntajes() {
         try {
-            const response = await fetch("http://localhost:4000/traerPuntajes", {
+            const response = await fetch(url + "/traerPuntajes", {
                 method: "GET",
                 headers: { "Content-Type": "application/json" },
             });
 
-            // Primero necesitas parsear el JSON
             const data = await response.json();
+            console.log(data);
 
-            // Ahora sí puedes acceder a las propiedades
             if (data.res) {
-                console.log(data.message); // Aquí están los ganadores
-                // Hacer algo con los datos
+                setPuntajes(data.message);
             } else {
                 alert("No se encontraron puntajes");
             }
@@ -36,22 +34,93 @@ export default function Puntajes() {
             alert("Error al conectar con el servidor");
         }
     }
+
+    const irAOtraPagina = () => {
+        router.back();
+    };
+
     return (
+        <div className={styles.contenedor}>
+            <div className={styles.encabezado}>
+                <h1 className={styles.tituloEncabezado}>RANKING BATALLA ESPONJOSA</h1>
+            </div>
 
-        <>
-            <section className={styles.section1}>
-                <h1>Historial de juegos:</h1>
-                {/*<button onClick={traer}>ñañañañañañña</button> {puntajes.map((puntaje, index) => {
-                    <h2>{puntaje.}</h2>
-                })
-                }*/}
-                
-                
-            </section>
-            <section className={styles.center}>
-                <button onClick={irAOtraPagina} className={styles.button}>¡Comenzar Juego!</button>
-            </section>
-        </>
+            <div className={styles.seccionPodio}>
+                <div className={styles.contenedorPodio}>
+                    {puntajes[1] && (
+                        <div className={`${styles.tarjetaPodio} ${styles.segundoLugar}`}>
+                            <div className={styles.numeroPosicion}>2</div>
+                            <div className={styles.contenedorImagenJugador}>
+                                <img src="/imagenes/segundoLugar.jpg" alt={puntajes[1].usuario} className={styles.imagenJugador} />
+                            </div>
+                            <div className={styles.infoJugador}>
+                                <div className={styles.nombreJugador}>{puntajes[1].usuario}</div>
+                                <div className={styles.puntosJugador}>
+                                    <span className={styles.numeroPuntos}>{puntajes[1].partidas_ganadas}</span>
+                                    <span className={styles.etiquetaPuntos}>PTS</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
-    )
+                    {puntajes[0] && (
+                        <div className={`${styles.tarjetaPodio} ${styles.primerLugar}`}>
+                            <div className={styles.numeroPosicion}>1</div>
+                            <div className={styles.contenedorImagenJugador}>
+                                <img src="/imagenes/primerLugar.avif" alt={puntajes[0].usuario} className={styles.imagenJugador} />
+                            </div>
+                            <div className={styles.infoJugador}>
+                                <div className={styles.nombreJugador}>{puntajes[0].usuario}</div>
+                                <div className={styles.puntosJugador}>
+                                    <span className={styles.numeroPuntos}>{puntajes[0].partidas_ganadas}</span>
+                                    <span className={styles.etiquetaPuntos}>PTS</span>
+                                </div>
+                            </div>
+                            <div className={styles.corona}>👑</div>
+                        </div>
+                    )}
+
+                    {puntajes[2] && (
+                        <div className={`${styles.tarjetaPodio} ${styles.tercerLugar}`}>
+                            <div className={styles.numeroPosicion}>3</div>
+                            <div className={styles.contenedorImagenJugador}>
+                                <img src="/imagenes/tercerLugar.jpg" alt={puntajes[2].usuario} className={styles.imagenJugador} />
+                            </div>
+                            <div className={styles.infoJugador}>
+                                <div className={styles.nombreJugador}>{puntajes[2].usuario}</div>
+                                <div className={styles.puntosJugador}>
+                                    <span className={styles.numeroPuntos}>{puntajes[2].partidas_ganadas}</span>
+                                    <span className={styles.etiquetaPuntos}>PTS</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {puntajes.length > 3 && (
+                <div className={styles.seccionRanking}>
+                    <h2 className={styles.tituloRanking}>CLASIFICACIÓN COMPLETA</h2>
+                    <div className={styles.listaRanking}>
+                        {puntajes.slice(3).map((puntaje, index) => (
+                            <div key={puntaje.id_ganador} className={styles.itemRanking}>
+                                <div className={styles.posicionRanking}>{index + 4}</div>
+                                <div className={styles.nombreRanking}>{puntaje.usuario}</div>
+                                <div className={styles.puntosRanking}>
+                                    <span className={styles.numeroPuntosRanking}>{puntaje.partidas_ganadas}</span>
+                                    <span className={styles.etiquetaPuntosRanking}>PTS</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            <div className={styles.contenedorBoton}>
+                <button onClick={irAOtraPagina} className={styles.boton}>
+                    ¡COMENZAR JUEGO!
+                </button>
+            </div>
+        </div>
+    );
 }

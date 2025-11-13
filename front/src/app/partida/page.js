@@ -82,6 +82,9 @@ export default function pagina() {
     const [barcosListosContrincante, setBarcosListosContricante] = useState(1);
     const [partidaTerminada, setPartidaTerminada] = useState(1);
     const [misCoordenovich, setMisCoordenovich] = useState([]);
+    const [mensajeImpacto, setMensajeImpacto] = useState("");
+    const [mostrarPopup, setMostrarPopup] = useState(false);
+    const [mensajeConfirmar, setMensajeConfirmar] = useState("")
     const router = useRouter()
     let mensajeAtaca = "";
 
@@ -97,7 +100,6 @@ export default function pagina() {
             });
         }
     };
-
 
     function obtenerCasilla(e) {
         const id = e.target.id;
@@ -157,13 +159,14 @@ export default function pagina() {
         if (!socket || !isConnected || !idLogged) return;
 
         const handleRecibirDisparo = async (data) => {
-            console.log("📨 Disparo recibido:", data);
+            console.log("Disparo recibido:", data);
 
             if (data.receptor == Number(idLogged)) {
                 const mensaje = data.impactado
                     ? `¡Te impactaron en ${data.casilla}!`
                     : `Fallaron en ${data.casilla} (agua)`;
-                alert(mensaje);
+                setMensajeImpacto(mensaje);
+                setMostrarPopup(true);
 
                 const btn = document.getElementById(data.casilla);
                 if (btn) {
@@ -185,7 +188,7 @@ export default function pagina() {
                             id2: id2,
                             dificultad: dificultad
                         });
-                    }, 1200); 
+                    }, 500);
                 }
             }
 
@@ -207,6 +210,24 @@ export default function pagina() {
     }, [socket, isConnected, idLogged]);
 
     useEffect(() => {
+        if (!partidaIniciada) return;
+
+        const intervalo = setInterval(() => {
+            if (socket && isConnected) {
+                socket.emit("verificar_fin_partida", {
+                    room: idPartida,
+                    idPartida: idPartida,
+                    id1: id1,
+                    id2: id2,
+                    dificultad: dificultad
+                });
+            }
+        }, 500);
+
+        return () => clearInterval(intervalo);
+    }, [partidaIniciada, socket, isConnected, idPartida, id1, id2, dificultad]);
+
+    useEffect(() => {
         if (!socket || !isConnected || !idLogged) return;
         socket.on("recibir_listo", data => {
             if (idLogged != data.idJugador) {
@@ -221,18 +242,24 @@ export default function pagina() {
         const handlePartidaFinalizada = (data) => {
             console.log("¡PARTIDA FINALIZADA!", data);
 
+            if (partidaTerminada !== 1) return;
+
             if (Number(data.ganador) === Number(idLogged)) {
-                alert("¡GANASTE!");
                 setPartidaTerminada(2);
-                setTimeout(() => {
-                    router.push(`/bienvenida`);
-                }, 2000);
+                for (let i = 0; i <= 1; i++) {
+                    alert("¡GANASTE!");
+                    setTimeout(() => {
+                        // router.push(`/bienvenida`);
+                    }, 2000);
+                }
             } else {
-                alert("Perdiste");
                 setPartidaTerminada(3);
-                setTimeout(() => {
-                    router.push(`/bienvenida`);
-                }, 2000);
+                for (let i = 0; i <= 1; i++) {
+                    alert("PERDISTE");
+                    setTimeout(() => {
+                        // router.push(`/bienvenida`);
+                    }, 2000);
+                }
             }
         };
 
@@ -241,7 +268,25 @@ export default function pagina() {
         return () => {
             socket.off("partida_finalizada", handlePartidaFinalizada);
         };
-    }, [socket, isConnected, idLogged, router]);
+    }, [socket, isConnected, idLogged, router, partidaTerminada]);
+
+    useEffect(() => { 
+        if (!partidaIniciada || partidaTerminada !== 1) return;
+
+        const intervalo = setInterval(() => {
+            if (socket && isConnected) {
+                socket.emit("verificar_fin_partida", {
+                    room: idPartida,
+                    idPartida: idPartida,
+                    id1: id1,
+                    id2: id2,
+                    dificultad: dificultad
+                });
+            }
+        }, 500);
+
+        return () => clearInterval(intervalo);
+    }, [partidaIniciada, partidaTerminada, socket, isConnected, idPartida, id1, id2, dificultad]);
 
     //turnos
     useEffect(() => {
@@ -438,7 +483,7 @@ export default function pagina() {
                         room: idPartida
                     });
                     setMiTurno(Number(nuevoTurno));
-                }, 1200);
+                }, 500);
             }
         } catch (error) {
             console.error("Error en disparo:", error);
@@ -534,7 +579,8 @@ export default function pagina() {
                     });
 
                     setConfirmado(true);
-                    alert("Barcos guardados con éxito");
+                    setMostrarPopup(true)
+                    setMensajeConfirmar("Barcos guardados con éxito");
                 } else {
                     alert("Error al obtener las coordenadas");
                 }
@@ -579,13 +625,13 @@ export default function pagina() {
                     setMisCoordenovich(prev => [...prev, coord.coordenada]);
                 })
                 console.log("mis coordenovich: ", misCoordenovich)
-                alert("Coordenadas traídas con éxito");
+                //alert("Coordenadas traídas con éxito");
             } else {
                 alert("No se pudieron traer las coordenadas");
             }
         } catch (error) {
             console.error("Error en /traerCoordenadas:", error);
-            alert("Error al conectar con el servidor");
+            //alert("Error al conectar con el servidor");
         }
     }
     async function chequearDisparos(texto) {
@@ -1004,6 +1050,24 @@ export default function pagina() {
                         <div>¡Perdiste! El oponente hundió todos tus barcos primero.</div>
                     </PopUp>
                 )}
+                { }
+                <PopUp
+                    open={mostrarPopup}
+                    tipo={null}
+                    onClose={() => {
+                        setMostrarPopup(false);
+                    }}
+                >{mensajeImpacto}
+                </PopUp>
+                <PopUp
+                    open={mostrarPopup}
+                    tipo={null}
+                    onClose={() => {
+                        setMostrarPopup(false);
+                    }}
+                >{mensajeConfirmar}
+                </PopUp>
+
             </section>
         </>
     )
