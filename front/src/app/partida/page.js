@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useSocket } from "../hooks/useSocket";
 import Image from 'next/image';
 import PopUp from "@/components/PopUp";
@@ -82,6 +82,7 @@ export default function pagina() {
     const [barcosListosContrincante, setBarcosListosContricante] = useState(1);
     const [partidaTerminada, setPartidaTerminada] = useState(1);
     const [misCoordenovich, setMisCoordenovich] = useState([]);
+    const router = useRouter()
     let mensajeAtaca = "";
 
     const seleccionarDificultad = (nivel) => {
@@ -104,10 +105,7 @@ export default function pagina() {
             setPrimerCasilla(id)
         }
         setCoordenadasSeleccionadas(prev => [...prev, id]);
-
-        //setCasillasUsadas(prev => [...prev, id]);
     }
-    //orientacion
     function detectarOrientacion(casillas) {
         if (casillas.length <= 1) return 'horizontal';
 
@@ -124,7 +122,6 @@ export default function pagina() {
 
         return null;
     }
-    //iniciar partida
     useEffect(() => {
         if (!socket || !isConnected || !idLogged) return;
 
@@ -162,19 +159,12 @@ export default function pagina() {
         const handleRecibirDisparo = async (data) => {
             console.log("📨 Disparo recibido:", data);
 
-            await chequearDisparos();
-            await finalizarPartida();
             if (data.receptor == Number(idLogged)) {
                 const mensaje = data.impactado
                     ? `¡Te impactaron en ${data.casilla}!`
                     : `Fallaron en ${data.casilla} (agua)`;
                 alert(mensaje);
 
-                /*const btn = document.getElementById(data.casilla);
-                if (btn) {
-                    btn.style.backgroundColor = data.impactado ? 'red' : 'blue';
-                    btn.disabled = true;
-                }*/
                 const btn = document.getElementById(data.casilla);
                 if (btn) {
                     const cell = btn.parentElement;
@@ -182,26 +172,31 @@ export default function pagina() {
                     btn.disabled = true;
                 }
 
+                if (data.impactado) {
+                    setTimeout(async () => {
+                        await chequearDisparos("recibí impacto");
 
+                        await new Promise(resolve => setTimeout(resolve, 500));
+
+                        socket.emit("verificar_fin_partida", {
+                            room: idPartida,
+                            idPartida: idPartida,
+                            id1: id1,
+                            id2: id2,
+                            dificultad: dificultad
+                        });
+                    }, 1200); 
+                }
             }
 
             if (data.emisor == Number(idLogged)) {
-                /*const btnEnemy = document.getElementById(`e-${data.casilla}`);
-                if (btnEnemy) {
-                    btnEnemy.style.backgroundColor = data.impactado ? 'red' : 'blue';
-                    btnEnemy.disabled = true;
-                }*/
                 const btnEnemy = document.getElementById(`e-${data.casilla}`);
                 if (btnEnemy) {
                     const cellEnemy = btnEnemy.parentElement;
                     cellEnemy.style.backgroundColor = data.impactado ? 'red' : 'blue';
                     btnEnemy.disabled = true;
                 }
-
-
             }
-
-
         };
 
         socket.on("recibir_disparo", handleRecibirDisparo);
@@ -219,6 +214,35 @@ export default function pagina() {
             }
         })
     }, [socket, isConnected, idLogged])
+
+    useEffect(() => {
+        if (!socket || !isConnected || !idLogged) return;
+
+        const handlePartidaFinalizada = (data) => {
+            console.log("¡PARTIDA FINALIZADA!", data);
+
+            if (Number(data.ganador) === Number(idLogged)) {
+                alert("¡GANASTE!");
+                setPartidaTerminada(2);
+                setTimeout(() => {
+                    router.push(`/bienvenida`);
+                }, 2000);
+            } else {
+                alert("Perdiste");
+                setPartidaTerminada(3);
+                setTimeout(() => {
+                    router.push(`/bienvenida`);
+                }, 2000);
+            }
+        };
+
+        socket.on("partida_finalizada", handlePartidaFinalizada);
+
+        return () => {
+            socket.off("partida_finalizada", handlePartidaFinalizada);
+        };
+    }, [socket, isConnected, idLogged, router]);
+
     //turnos
     useEffect(() => {
         if (!socket || !isConnected || !idLogged) return;
@@ -233,91 +257,11 @@ export default function pagina() {
             if (data.receptor == Number(idLogged)) {
                 setMiTurno(data.receptor)
                 console.log("Es mi turno")
-                chequearDisparos();
-                finalizarPartida();
             }
         })
 
     }, [socket, isConnected, idLogged, idPartida])
-    //casillas
-    /*useEffect(() => {
-        console.log(coordenadasSeleccionadas);
-        console.log("primer casilla: ", primerCasilla);
-        console.log("Barco: ", selectedBarco);
 
-        if (selectedBarco && coordenadasSeleccionadas.length === selectedBarco.largo) {
-            const orientacionDetectada = detectarOrientacion(coordenadasSeleccionadas);
-
-            if (!orientacionDetectada) {
-                alert("Las casillas deben ser contiguas en línea recta (horizontal o vertical)");
-                setCoordenadasSeleccionadas([]);
-                setPrimerCasilla(null);
-                return;
-            }
-
-            const sonContiguas = validarCasillasContiguas(coordenadasSeleccionadas, orientacionDetectada);
-
-            if (!sonContiguas) {
-                alert("Las casillas deben ser consecutivas sin espacios");
-                setCoordenadasSeleccionadas([]);
-                setPrimerCasilla(null);
-                return;
-            }
-            const primerBoton = document.getElementById(primerCasilla);
-            if (primerBoton) {
-                const primerCasillero = primerBoton.parentElement;
-
-                const imgContainer = document.createElement('div');
-                imgContainer.style.position = 'absolute';
-                imgContainer.style.top = '0';
-                imgContainer.style.left = '0';
-                imgContainer.style.zIndex = '10';
-                imgContainer.style.pointerEvents = 'none';
-
-                if (orientacionDetectada === 'horizontal') {
-                    imgContainer.style.width = `calc(${selectedBarco.largo} * 100%)`;
-                    imgContainer.style.height = '100%';
-                } else {
-                    imgContainer.style.width = '100%';
-                    imgContainer.style.height = `calc(${selectedBarco.largo} * 100%)`;
-                }
-
-                const img = document.createElement('img');
-                img.src = orientacionDetectada === 'horizontal' ? selectedBarco.imgH : selectedBarco.img;
-                img.alt = selectedBarco.nombre;
-                img.style.width = '100%';
-                img.style.height = '100%';
-                img.style.objectFit = 'fill';
-
-                imgContainer.appendChild(img);
-
-                primerCasillero.style.position = 'relative';
-                primerCasillero.appendChild(imgContainer);
-
-                coordenadasSeleccionadas.forEach(coord => {
-                    const btn = document.getElementById(coord);
-                    if (btn) {
-                        btn.disabled = true;
-                        btn.style.backgroundColor = 'rgba(0, 100, 200, 0.2)';
-                    }
-                });
-            }
-
-            setBarcosColocados(prev => [...prev, {
-                barco: selectedBarco,
-                coordenadas: [...coordenadasSeleccionadas],
-                primeraCasilla: primerCasilla,
-                orientacion: orientacionDetectada,
-                coordenadas: coordenadasSeleccionadas
-            }]);
-            setCoordenadasSeleccionadas([]);
-            setPrimerCasilla(null);
-            setSelectedBarco(null);
-            setSelectedBarcoId(null);
-
-            console.log("Barco colocado en orientación:", orientacionDetectada);
-        }
-    }, [coordenadasSeleccionadas, selectedBarco, primerCasilla]);*/
     useEffect(() => {
         console.log(coordenadasSeleccionadas);
         console.log("primer casilla: ", primerCasilla);
@@ -331,7 +275,6 @@ export default function pagina() {
 
                 if (!orientacionDetectada) {
                     alert("Las casillas deben ser contiguas en línea recta (horizontal o vertical)");
-                    // ✅ LIMPIAR estado visual de los botones seleccionados incorrectamente
                     coordenadasSeleccionadas.forEach(coord => {
                         const btn = document.getElementById(coord);
                         if (btn) {
@@ -348,7 +291,6 @@ export default function pagina() {
 
                 if (!sonContiguas) {
                     alert("Las casillas deben ser consecutivas sin espacios");
-                    // ✅ LIMPIAR estado visual de los botones seleccionados incorrectamente
                     coordenadasSeleccionadas.forEach(coord => {
                         const btn = document.getElementById(coord);
                         if (btn) {
@@ -414,7 +356,7 @@ export default function pagina() {
 
                 setBarcosColocados(prev => [...prev, {
                     barco: selectedBarco,
-                    coordenadas: coordsOrdenadas, // solo esta
+                    coordenadas: coordsOrdenadas,
                     primeraCasilla: primerCasilla,
                     orientacion: orientacionDetectada
                 }]);
@@ -430,7 +372,6 @@ export default function pagina() {
         }
     }, [coordenadasSeleccionadas, selectedBarco, primerCasilla]);
 
-    //seleccionar barco
     useEffect(() => {
         for (let i = 0; i < barcosInfo.length; i++) {
             if (barcosInfo[i].id == selectedBarcoId) {
@@ -439,74 +380,71 @@ export default function pagina() {
         }
     }, [selectedBarcoId])
 
-    //probando
-    function verCoordenadas() {
-        console.log(coordenadasContrincante)
-    }
-    //atacar
     async function obtenerCasillaEnemy(e) {
         if (partidaIniciada === false) {
             alert("Espera a que el otro jugador coloque sus barcos")
             return;
-
         }
+
         if (Number(miTurno) !== Number(idLogged)) {
-            alert("No es tu turno perrito paciencia")
+            alert("No es tu turno")
             return;
         }
-        /*const id = e.target.id;
-        setSelectedCasillaEnemy(id);
-        socket.emit("enviar_disparo", {
-            room: idPartida,
-            emisor: idLogged,
-            receptor: esJugador1 ? id2 : id1,
-            casilla: id
-        })*/
-        //probando
-        const id = e.target.id;    // ahora id = e-A1
-        // pero enviás solo la coordenada real
-        socket.emit("enviar_disparo", {
-            room: idPartida,
-            emisor: idLogged,
-            receptor: esJugador1 ? id2 : id1,
-            casilla: id.replace("e-", "")
-        });
+
+        const id = e.target.id;
         let idBD = id.replace("e-", "")
-        console.log(id, " enemigo");
+        console.log("Disparando a:", idBD);
+
         const data = {
             id_partida: idPartida,
             coordenada: idBD,
             id_jugador: idLogged,
         }
+
         try {
             const response = await fetch(url + "/disparo", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data),
             });
-            if (response.res == true) {
-                console.log("disparado")
-                //finalizarPartida();
+
+            const resultado = await response.json();
+
+            if (resultado.res) {
+                socket.emit("enviar_disparo", {
+                    room: idPartida,
+                    emisor: idLogged,
+                    receptor: esJugador1 ? id2 : id1,
+                    casilla: idBD
+                });
+
+                setTimeout(async () => {
+                    await chequearDisparos("después del disparo");
+
+                    await new Promise(resolve => setTimeout(resolve, 500));
+
+                    socket.emit("verificar_fin_partida", {
+                        room: idPartida,
+                        idPartida: idPartida,
+                        id1: id1,
+                        id2: id2,
+                        dificultad: dificultad
+                    });
+
+                    const nuevoTurno = esJugador1 ? id2 : id1;
+                    socket.emit("cambiar_turno", {
+                        receptor: nuevoTurno,
+                        emisor: idLogged,
+                        room: idPartida
+                    });
+                    setMiTurno(Number(nuevoTurno));
+                }, 1200);
             }
         } catch (error) {
-            console.error("Error en /disparo:", error);
+            console.error("Error en disparo:", error);
             alert("Error al conectar con el servidor");
         }
-        console.log("enviando barcos al contrincante");
-        setTimeout(() => {
-            const nuevoTurno = esJugador1 ? id2 : id1;
-
-            socket.emit("cambiar_turno", {
-                receptor: nuevoTurno,
-                emisor: idLogged,
-                room: idPartida
-            });
-
-            setMiTurno(Number(nuevoTurno));
-            console.log("🔄 Turno cambiado a:", nuevoTurno);
-        }, 500);
     }
-
     function validarCasillasContiguas(casillas, orientacion) {
         if (casillas.length <= 1) return true;
 
@@ -531,8 +469,6 @@ export default function pagina() {
             return mismaColumna && consecutivas;
         }
     }
-    //confirmar barcos colocados
-    // Modificar la función coords para que retorne las coordenadas
     async function confirmar() {
         if (barcosColocados.length != barcosInfo.length) {
             alert(`Poné los ${barcosInfo.length} barcos primero`);
@@ -557,7 +493,6 @@ export default function pagina() {
         };
 
         try {
-            // 1. Guardar barcos en BD
             const response = await fetch(url + "/agregarBarco", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -566,7 +501,6 @@ export default function pagina() {
             const data = await response.json();
 
             if (data.res == true) {
-                // 2. Obtener las coordenadas desde la BD
                 const coordsResponse = await fetch(url + "/traerCoordenadas", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -581,17 +515,15 @@ export default function pagina() {
                 if (coordsData.res) {
                     const coordenadas = coordsData.coords;
 
-                    // 3. Actualizar el estado
                     setMisCoordenovich(coordenadas);
 
-                    // 4. Usar el valor directamente en socket (no el estado)
                     console.log("enviando barcos al contrincante");
                     console.log("Coordenadas a enviar:", coordenadas);
 
                     socket.emit("enviar_barcos", {
                         room: idPartida,
                         jugador: idLogged,
-                        casillas: coordenadas.map(c => c.coordenada), // Extraer solo las coordenadas
+                        casillas: coordenadas.map(c => c.coordenada),
                         barcos: barcosColocados
                     });
 
@@ -612,7 +544,6 @@ export default function pagina() {
             alert("Error al conectar con el servidor");
         }
     }
-    //mensajes encabezado
     let mensajeHeader = "Ubicá tus barcos, seleccionando un barco y luego las casillas";
     if (barcosColocados.length == barcosInfo.length && !confirmado) {
         mensajeHeader = "No te olvides de apretar Confirmar";
@@ -657,7 +588,6 @@ export default function pagina() {
             alert("Error al conectar con el servidor");
         }
     }
-    //ver barcos hundidos
     async function chequearDisparos(texto) {
         console.log(texto)
         if (Number(id1) === Number(idLogged)) {
@@ -718,92 +648,6 @@ export default function pagina() {
             probarImpactos2();
         }
     }
-    //partida termina bien
-    async function finalizarPartida() {
-        let info = {
-            id1: id1,
-            id2: id2,
-            id_partida: idPartida
-        }
-        try {
-            const response = await fetch(url + "/terminarPartida", {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(info)
-            })
-            const data = await response.json();
-
-            if (data.res) {
-                alert("partida finalizada")
-                setPartidaTerminada(2);
-            }
-        } catch (error) {
-            console.log("error")
-            alert("error")
-        }
-    }
-    //terminar partida
-    /*useEffect(() => {
-        const finalizarPartida = async () => {
-            if (!id1 || !id2 || !idPartida) return;
-    
-            const datos = {
-                id_partida: idPartida,
-                id1: id1,
-                id2: id2
-            };
-    
-            try {
-                const response = await fetch(url + "/terminarPartida", {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(datos)
-                });
-    
-                const data = await response.json();
-    
-                if (data.res) {
-                    alert("La partida ha terminado correctamente.");
-                } else {
-                    alert("Hubo un error al finalizar la partida.");
-                }
-            } catch (error) {
-                console.error("Error al finalizar la partida:", error);
-                alert("Error en la conexión al servidor.");
-            }
-        };
-        finalizarPartida();
-    }, [idPartida, id1, id2]);*/
-
-    /*async function finalizarPartida() {
-    let info = {
-        id1: id1,
-        id2: id2,
-        id_partida: idPartida,
-        dificultad: dificultad
-    }
-    try {
-        const response = await fetch(url + "/terminarPartida", {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(info)
-        })
-        const data = await response.json();
-        if (data.res) {
-            alert("partida finalizada")
-            setPartidaTerminada(2);
-        }
-    } catch (error) {
-        console.log("error")
-        alert("error")
-    }
-} */
 
     if (mostrarSelectorDificultad) {
         return (
@@ -1150,20 +994,16 @@ export default function pagina() {
                         </div>
                     </div>
                 </div>
-                {partidaTerminada == 2 ? (
-                    <>
-                        <PopUp>
-                            <div>Felicidades! Ganaste la partida!</div>
-                        </PopUp>
-                    </>
-                ) : partidaTerminada == 3 ? (
-                    <>
-                        <PopUp>
-                            <div>{idGanador} ganó la partida! Qué lástima! </div>
-                        </PopUp>
-                    </>
-
-                ) : (null)}
+                {partidaTerminada === 2 && (
+                    <PopUp>
+                        <div>¡Felicidades! ¡Ganaste la partida!</div>
+                    </PopUp>
+                )}
+                {partidaTerminada === 3 && (
+                    <PopUp>
+                        <div>¡Perdiste! El oponente hundió todos tus barcos primero.</div>
+                    </PopUp>
+                )}
             </section>
         </>
     )
