@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import Button from "@/components/Boton";
 import Input from "@/components/Input";
@@ -10,37 +10,56 @@ import styles from "./page.module.css";
 
 export default function Crud() {
   const { url } = useConnection();
-  const [nombre, setNombre] = useState("");
+  const [usuario, setUsuario] = useState("");
   const [id, setId] = useState(0);
   const [mostrarPopup, setMostrarPopup] = useState(false);
   const [mensajePopup, setMensajePopup] = useState("");
   const router = useRouter();
 
-  function cambiarNombre() {
+  function cambiarUsuario() {
     let data = {
-      nombre: nombre,
-      id_jugador: id
+      usuario: usuario,
+      id_jugador: id,
     };
-    console.log(data)
-    fetch(url + "/cambiarNombre", {
+
+    fetch(url + "/cambiarUsuario", {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
     })
-      .then((response) => response.json())
+      .then((r) => r.json())
       .then((response) => {
         if (response.res) {
           console.log(response);
-          setMensajePopup("Cambiado con exito");
+          setMensajePopup("Usuario cambiado con exito");
           setMostrarPopup(true);
         }
       });
   }
 
-  function guardarNombre(event) {
-    setNombre(event.target.value);
+  function reiniciarTablas() {
+    fetch(url + "/reiniciarTablas", {
+      method: "DELETE",
+    })
+      .then((r) => r.json())
+      .then((response) => {
+        if (response.res) {
+          setMensajePopup("Tablas reiniciadas correctamente")
+          setMostrarPopup(true)
+        } else {
+          alert("Error reiniciando las tablas");
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        alert("Error en la petición");
+      });
+  }
+
+  function guardarUsuario(event) {
+    setUsuario(event.target.value);
   }
 
   function guardarId(event) {
@@ -54,16 +73,21 @@ export default function Crud() {
 
   return (
     <>
+     
+     
+      <Button onClick={irHome} text="Ir a jugar" />
       <div className={styles.banner}>
         <h1>Bienvenido Administrador!</h1>
       </div>
       <div className={styles.container}>
         <h2>Cambiar nombre de un usuario:</h2>
         <label>Nombre de usuario nuevo:</label>
-        <Input onChange={guardarNombre}></Input>
+        <Input onChange={guardarUsuario} />
         <label>ID del jugador:</label>
         <Input onChange={guardarId}></Input>
-        <Button onClick={cambiarNombre} text="Cambiar Nombre"></Button>
+        <Button onClick={cambiarUsuario} text="Cambiar nombre usuario" />
+        <h2>Reiniciar base de datos: </h2>
+        <Button onClick={reiniciarTablas} text="Reiniciar Tablas" />
         <Button onClick={irHome} text="Volver al Inicio"></Button>
       </div>
       <PopUp
@@ -72,7 +96,7 @@ export default function Crud() {
         onClose={() => {
           setMostrarPopup(false);
         }}
-      ></PopUp>
+      >{mensajePopup}</PopUp>
     </>
-  )
+  );
 }
