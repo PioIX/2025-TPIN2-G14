@@ -36,7 +36,7 @@ export default function Puntajes() {
     }
 
     const irAOtraPagina = () => {
-        router.push("/bienvenida");
+        router.push("/login");
     };
 
     return (
@@ -118,7 +118,7 @@ export default function Puntajes() {
 
             <div className={styles.contenedorBoton}>
                 <button onClick={irAOtraPagina} className={styles.boton}>
-                    Volver al Inicio
+                    Volver
                 </button>
             </div>
         </div>

@@ -67,15 +67,12 @@ export default function Crud() {
   }
 
   function irHome() {
-    let url = "/home?idLogged=3&user=admin";
+    let url = "/login";
     router.push(url);
   }
 
   return (
     <>
-     
-     
-      <Button onClick={irHome} text="Ir a jugar" />
       <div className={styles.banner}>
         <h1>Bienvenido Administrador!</h1>
       </div>

@@ -13,7 +13,7 @@ var port = process.env.PORT || 4000;
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors({
-  origin: ["http://192.168.0.235:3000", "http://192.168.0.235:3001", "http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://localhost:3000", "http://localhost:3002", "http://localhost:3003"],
+  origin: ["http://192.168.0.235:3000", "http://192.168.0.235:3001", "http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.0.235:3000", "http://192.168.0.235:3001", "http://192.168.0.235:3000", "http://192.168.0.235:3001", "http://localhost:3000", "http://localhost:3002", "http://localhost:3003"],
   credentials: true
 }));
 
@@ -25,7 +25,7 @@ const server = app.listen(port, () => {
 
 const io = require('socket.io')(server, {
   cors: {
-    origin: ["http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://192.168.0.235:3000", "http://192.168.0.235:3001", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
+    origin: ["http://192.168.0.235:3000", "http://192.168.0.235:3001", "http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.0.235:3000", "http://192.168.0.235:3001", "http://192.168.0.235:3000", "http://192.168.0.235:3001", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
   }
@@ -530,19 +530,35 @@ app.post('/traerCoordenadas', async function (req, res) {
 
 app.delete('/reiniciarTablas', async function (req, res) {
   try {
+    console.log("Reiniciando tablas...");
+
     await realizarQuery(`SET FOREIGN_KEY_CHECKS = 0;`);
-    await realizarQuery(`TRUNCATE TABLE Coordenadas;`);
-    await realizarQuery(`TRUNCATE TABLE Disparos;`);
-    await realizarQuery(`TRUNCATE TABLE Barcos;`);
-    await realizarQuery(`TRUNCATE TABLE JugadoresPorPartida;`);
-    await realizarQuery(`TRUNCATE TABLE Partidas;`);
+
+    await realizarQuery(`DELETE FROM Coordenadas;`);
+    await realizarQuery(`DELETE FROM Disparos;`);
+    await realizarQuery(`DELETE FROM JugadoresPorPartida;`);
+
+    await realizarQuery(`DELETE FROM Barcos;`);
+    await realizarQuery(`DELETE FROM Partidas;`);
+
+    await realizarQuery(`ALTER TABLE Coordenadas AUTO_INCREMENT = 1;`);
+    await realizarQuery(`ALTER TABLE Disparos AUTO_INCREMENT = 1;`);
+    await realizarQuery(`ALTER TABLE JugadoresPorPartida AUTO_INCREMENT = 1;`);
+    await realizarQuery(`ALTER TABLE Barcos AUTO_INCREMENT = 1;`);
+    await realizarQuery(`ALTER TABLE Partidas AUTO_INCREMENT = 1;`);
+
     await realizarQuery(`SET FOREIGN_KEY_CHECKS = 1;`);
+
     return res.send({ res: true, mensaje: "Tablas reiniciadas correctamente." });
   } catch (error) {
     console.error("Error en /reiniciarTablas:", error);
-    res.send({ res: false, message: "Error reiniciando las tablas." });
+
+    try { await realizarQuery(`SET FOREIGN_KEY_CHECKS = 1;`); } catch (e) { /* ignore */ }
+
+    return res.status(500).send({ res: false, message: "Error reiniciando las tablas." });
   }
 });
+
 
 let jugadoresEnLinea = [];
 
