@@ -2,14 +2,18 @@
 
 import Button from "@/components/Boton";
 import Input from "@/components/Input";
+import PopUp from "@/components/PopUp";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useConnection } from "../hooks/useConnection";
+import styles from "./page.module.css";
 
 export default function Crud() {
   const { url } = useConnection();
   const [usuario, setUsuario] = useState("");
   const [id, setId] = useState(0);
+  const [mostrarPopup, setMostrarPopup] = useState(false);
+  const [mensajePopup, setMensajePopup] = useState("");
   const router = useRouter();
 
   function cambiarUsuario() {
@@ -28,7 +32,9 @@ export default function Crud() {
       .then((r) => r.json())
       .then((response) => {
         if (response.res) {
-          alert("Cambiado con éxito");
+          console.log(response);
+          setMensajePopup("Usuario cambiado con exito");
+          setMostrarPopup(true);
         }
       });
   }
@@ -40,7 +46,8 @@ export default function Crud() {
       .then((r) => r.json())
       .then((response) => {
         if (response.res) {
-          alert("Tablas reiniciadas correctamente");
+          setMensajePopup("Tablas reiniciadas correctamente")
+          setMostrarPopup(true)
         } else {
           alert("Error reiniciando las tablas");
         }
@@ -66,12 +73,30 @@ export default function Crud() {
 
   return (
     <>
-      <Input onChange={guardarUsuario} />
-      <Input onChange={guardarId} />
-
-      <Button onClick={cambiarUsuario} text="Cambiar nombre usuario" />
-      <Button onClick={reiniciarTablas} text="Reiniciar Tablas" />
+     
+     
       <Button onClick={irHome} text="Ir a jugar" />
+      <div className={styles.banner}>
+        <h1>Bienvenido Administrador!</h1>
+      </div>
+      <div className={styles.container}>
+        <h2>Cambiar nombre de un usuario:</h2>
+        <label>Nombre de usuario nuevo:</label>
+        <Input onChange={guardarUsuario} />
+        <label>ID del jugador:</label>
+        <Input onChange={guardarId}></Input>
+        <Button onClick={cambiarUsuario} text="Cambiar nombre usuario" />
+        <h2>Reiniciar base de datos: </h2>
+        <Button onClick={reiniciarTablas} text="Reiniciar Tablas" />
+        <Button onClick={irHome} text="Volver al Inicio"></Button>
+      </div>
+      <PopUp
+        open={mostrarPopup}
+        tipo={null}
+        onClose={() => {
+          setMostrarPopup(false);
+        }}
+      >{mensajePopup}</PopUp>
     </>
   );
 }
