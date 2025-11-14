@@ -304,3 +304,45 @@
     font-weight: 900;
     box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
 }
+
+.botonIrse{
+  background-color: #0c7272;
+  border: none;
+  color: white;
+  padding: 0.7rem 1rem;
+  text-align: center;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  border-radius: 14px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  transition: transform 0.09s ease, box-shadow 0.15s ease, opacity 0.2s ease;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.20);
+}
+
+.botonesPopUp{
+  display:flex;
+  justify-content: space-around;
+  gap:1rem;
+  padding-top: 1rem;
+  margin-top: 1rem;;
+}
+
+/*probando*/
+.casillero button {
+    position: relative;
+    font-size: 0; /* esconde el texto principal para que no afecte */
+}
+
+.casillero button::after {
+    content: attr(id);
+    position: absolute;
+    bottom: 2px;
+    right: 3px;
+    font-size: 8px;  /* pequeño */
+    color: #16545469;
+}

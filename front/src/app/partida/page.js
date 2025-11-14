@@ -1090,7 +1090,16 @@ export default function pagina() {
                                 <img src="/imagenes/bobagua.png" />
                             </div>
                         ) : null}
-                        <div>{mensajePopup}</div>
+                        <div>
+                            <h2>{mensajePopup}</h2>
+                            {condicion === 3 || condicion === 2 ? (
+                                <div className={styles.botonesPopUp}>
+                                    <button className={styles.botonIrse} onClick={() => router.push("/bienvenida")}>Volver al Inicio</button>
+                                    <button className={styles.botonIrse} onClick={() => router.push("/puntajes")}>Ver historial de puntajes</button>
+                                </div>
+                            ) : (null)}
+                        </div>
+
                     </div>
 
                 </PopUp>
