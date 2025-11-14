@@ -256,22 +256,22 @@ export default function pagina() {
             if (Number(data.ganador) === Number(idLogged)) {
                 setPartidaTerminada(2);
                 for (let i = 0; i <= 1; i++) {
-                     setMensajePopup("Felicidades! Ganaste la partida!");
-                     setCondicion(2);
-                     setMostrarPopup(true);
-
+                    setMensajePopup("Felicidades! Ganaste la partida!");
+                    setCondicion(2);
+                    setMostrarPopup(true);
                     setPartidaTerminada(2);
                     setTimeout(() => {
-                        router.push(`/puntajes`);
-                    }, 5000); 
+                        // router.push(`/puntajes`);
+                    }, 5000);
                 }
             } else {
                 setPartidaTerminada(3);
                 for (let i = 0; i <= 1; i++) {
+                    setMensajePopup("Mala suerte, perdiste la partida!");
                     setMostrarPopup(true)
                     setCondicion(3);
                     setTimeout(() => {
-                        router.push(`/puntajes`);
+                        // router.push(`/puntajes`);
                     }, 5000);
                 }
             }
@@ -284,7 +284,7 @@ export default function pagina() {
         };
     }, [socket, isConnected, idLogged, router, partidaTerminada]);
 
-    useEffect(() => { 
+    useEffect(() => {
         if (!partidaIniciada || partidaTerminada !== 1) return;
 
         const intervalo = setInterval(() => {
