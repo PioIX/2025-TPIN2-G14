@@ -2,14 +2,18 @@
 
 import Button from "@/components/Boton";
 import Input from "@/components/Input";
+import PopUp from "@/components/PopUp";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useConnection } from "../hooks/useConnection";
+import styles from "./page.module.css";
 
 export default function Crud() {
   const { url } = useConnection();
-  const [nombre, setNombre] = useState("")
-  const [id, setId] = useState(0)
+  const [nombre, setNombre] = useState("");
+  const [id, setId] = useState(0);
+  const [mostrarPopup, setMostrarPopup] = useState(false);
+  const [mensajePopup, setMensajePopup] = useState("");
   const router = useRouter();
 
   function cambiarNombre() {
@@ -29,7 +33,8 @@ export default function Crud() {
       .then((response) => {
         if (response.res) {
           console.log(response);
-          alert("Cambiado con exito");
+          setMensajePopup("Cambiado con exito");
+          setMostrarPopup(true);
         }
       });
   }
@@ -49,10 +54,25 @@ export default function Crud() {
 
   return (
     <>
-      <Input onChange={guardarNombre}></Input>
-      <Input onChange={guardarId}></Input>
-      <Button onClick={cambiarNombre} text="Cambiar Nombre"></Button>
-      <Button onClick={irHome} text="Ir a jugar"></Button>
+      <div className={styles.banner}>
+        <h1>Bienvenido Administrador!</h1>
+      </div>
+      <div className={styles.container}>
+        <h2>Cambiar nombre de un usuario:</h2>
+        <label>Nombre de usuario nuevo:</label>
+        <Input onChange={guardarNombre}></Input>
+        <label>ID del jugador:</label>
+        <Input onChange={guardarId}></Input>
+        <Button onClick={cambiarNombre} text="Cambiar Nombre"></Button>
+        <Button onClick={irHome} text="Volver al Inicio"></Button>
+      </div>
+      <PopUp
+        open={mostrarPopup}
+        tipo={null}
+        onClose={() => {
+          setMostrarPopup(false);
+        }}
+      ></PopUp>
     </>
   )
 }
