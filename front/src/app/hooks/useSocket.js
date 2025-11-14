@@ -3,7 +3,7 @@ import io from 'socket.io-client';
 
 
 
-const useSocket = (options = { withCredentials: false }, serverUrl = "ws://192.168.0.235:4000/") => { //ACÁ PONER LA IP DEL BACK
+const useSocket = (options = { withCredentials: false }, serverUrl = "ws://10.1.5.88:4000/") => { //ACÁ PONER LA IP DEL BACK
 
 
   const [socket, setSocket] = useState(null);
