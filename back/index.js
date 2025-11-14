@@ -478,14 +478,14 @@ app.delete('/eliminarJugador', async function (req, res) {
   }
 })
 
-app.put('/cambiarNombre', async function (req, res) {
+app.put('/cambiarUsuario', async function (req, res) {
   try {
     console.log(req.body)
-    await realizarQuery(` UPDATE Jugadores SET nombre = '${req.body.nombre}' WHERE id_jugador = ${req.body.id_jugador}`);
+    await realizarQuery(` UPDATE Jugadores SET usuario = '${req.body.usuario}' WHERE id_jugador = ${req.body.id_jugador}`);
     res.send({ res: true });
   } catch (error) {
-    console.error("Error en /cambiarNombre:", error);
-    res.send({ res: false, mensaje: "Error al actualizar el nombre" });
+    console.error("Error en /cambiarUsuario:", error);
+    res.send({ res: false, mensaje: "Error al actualizar el usuario" });
   }
 });
 
@@ -511,22 +511,6 @@ app.get('/traerBarcos', async function (req, res) {
   }
 });
 
-/*app.post('/traerCoordenadas', async function (req, res) {
-  try {
-    const coordenadas = await realizarQuery(`
-      SELECT Coordenadas.coordenada_barco AS coordenada, Coordenadas.impacto, Coordenadas.id_barco, Barcos.longitud
-      FROM Coordenadas
-      INNER JOIN Barcos ON Coordenadas.id_barco = Barcos.id_barco
-      INNER JOIN JugadoresPorPartida ON JugadoresPorPartida.id_jugador = Barcos.id_jugador
-      WHERE Coordenadas.id_partida = ${req.body.id_partida} AND JugadoresPorPartida.id_jugador = ${req.body.id_jugador}
-      ORDER BY Barcos.id_barco, Coordenadas.coordenada_barco
-    `);
-    res.send({ res: true, coords: coordenadas });
-  } catch (error) {
-    console.error("Error en /traerCoordenadas:", error);
-    res.send({ res: false, message: "Error obteniendo las coordenadas del jugador." });
-  }
-});*/
 app.post('/traerCoordenadas', async function (req, res) {
   try {
     const coordenadas = await realizarQuery(`
@@ -543,6 +527,23 @@ app.post('/traerCoordenadas', async function (req, res) {
     res.send({ res: false, message: "Error obteniendo las coordenadas del jugador." });
   }
 });
+
+app.delete('/reiniciarTablas', async function (req, res) {
+  try {
+    await realizarQuery(`SET FOREIGN_KEY_CHECKS = 0;`);
+    await realizarQuery(`TRUNCATE TABLE Coordenadas;`);
+    await realizarQuery(`TRUNCATE TABLE Disparos;`);
+    await realizarQuery(`TRUNCATE TABLE Barcos;`);
+    await realizarQuery(`TRUNCATE TABLE JugadoresPorPartida;`);
+    await realizarQuery(`TRUNCATE TABLE Partidas;`);
+    await realizarQuery(`SET FOREIGN_KEY_CHECKS = 1;`);
+    return res.send({ res: true, mensaje: "Tablas reiniciadas correctamente." });
+  } catch (error) {
+    console.error("Error en /reiniciarTablas:", error);
+    res.send({ res: false, message: "Error reiniciando las tablas." });
+  }
+});
+
 let jugadoresEnLinea = [];
 
 const maxPlayers = 3;

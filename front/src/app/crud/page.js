@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import Button from "@/components/Boton";
 import Input from "@/components/Input";
@@ -8,34 +8,51 @@ import { useConnection } from "../hooks/useConnection";
 
 export default function Crud() {
   const { url } = useConnection();
-  const [nombre, setNombre] = useState("")
-  const [id, setId] = useState(0)
+  const [usuario, setUsuario] = useState("");
+  const [id, setId] = useState(0);
   const router = useRouter();
 
-  function cambiarNombre() {
+  function cambiarUsuario() {
     let data = {
-      nombre: nombre,
-      id_jugador: id
+      usuario: usuario,
+      id_jugador: id,
     };
-    console.log(data)
-    fetch(url + "/cambiarNombre", {
+
+    fetch(url + "/cambiarUsuario", {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
     })
-      .then((response) => response.json())
+      .then((r) => r.json())
       .then((response) => {
         if (response.res) {
-          console.log(response);
-          alert("Cambiado con exito");
+          alert("Cambiado con éxito");
         }
       });
   }
 
-  function guardarNombre(event) {
-    setNombre(event.target.value);
+  function reiniciarTablas() {
+    fetch(url + "/reiniciarTablas", {
+      method: "DELETE",
+    })
+      .then((r) => r.json())
+      .then((response) => {
+        if (response.res) {
+          alert("Tablas reiniciadas correctamente");
+        } else {
+          alert("Error reiniciando las tablas");
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        alert("Error en la petición");
+      });
+  }
+
+  function guardarUsuario(event) {
+    setUsuario(event.target.value);
   }
 
   function guardarId(event) {
@@ -49,10 +66,12 @@ export default function Crud() {
 
   return (
     <>
-      <Input onChange={guardarNombre}></Input>
-      <Input onChange={guardarId}></Input>
-      <Button onClick={cambiarNombre} text="Cambiar Nombre"></Button>
-      <Button onClick={irHome} text="Ir a jugar"></Button>
+      <Input onChange={guardarUsuario} />
+      <Input onChange={guardarId} />
+
+      <Button onClick={cambiarUsuario} text="Cambiar nombre usuario" />
+      <Button onClick={reiniciarTablas} text="Reiniciar Tablas" />
+      <Button onClick={irHome} text="Ir a jugar" />
     </>
-  )
+  );
 }
