@@ -10,15 +10,11 @@ export default function Puntajes() {
     const router = useRouter();
     const { url } = useConnection();
 
-    const irAOtraPagina = () => {
-        router.back();
-    };
-
     useEffect(() => {
-        traer();
+        traerPuntajes();
     }, []);
 
-    async function traer() {
+    async function traerPuntajes() {
         try {
             const response = await fetch(url + "/traerPuntajes", {
                 method: "GET",
@@ -29,7 +25,6 @@ export default function Puntajes() {
             console.log(data);
 
             if (data.res) {
-                console.log(data.message);
                 setPuntajes(data.message);
             } else {
                 alert("No se encontraron puntajes");
@@ -40,71 +35,92 @@ export default function Puntajes() {
         }
     }
 
+    const irAOtraPagina = () => {
+        router.back();
+    };
+
     return (
-        <>
-            <section className={styles.section1}>
-                <h1>Historial de juegos:</h1>
+        <div className={styles.contenedor}>
+            <div className={styles.encabezado}>
+                <h1 className={styles.tituloEncabezado}>RANKING BATALLA ESPONJOSA</h1>
+            </div>
 
-                {/* Podio de los 3 primeros lugares */}
-                <div className={styles.top3}>
-                    {/* Primer lugar */}
-                    <div className={`${styles.driver} ${styles.first}`}>
-                        <div className={styles.driverImgContainer}>
-                            <img
-                                src="/imagenes/bichito.jpg"
-                                alt="Lando Norris"
-                                className={styles.driverImg}
-                            />
+            <div className={styles.seccionPodio}>
+                <div className={styles.contenedorPodio}>
+                    {puntajes[1] && (
+                        <div className={`${styles.tarjetaPodio} ${styles.segundoLugar}`}>
+                            <div className={styles.numeroPosicion}>2</div>
+                            <div className={styles.contenedorImagenJugador}>
+                                <img src="/imagenes/segundoLugar.jpg" alt={puntajes[1].usuario} className={styles.imagenJugador} />
+                            </div>
+                            <div className={styles.infoJugador}>
+                                <div className={styles.nombreJugador}>{puntajes[1].usuario}</div>
+                                <div className={styles.puntosJugador}>
+                                    <span className={styles.numeroPuntos}>{puntajes[1].partidas_ganadas}</span>
+                                    <span className={styles.etiquetaPuntos}>PTS</span>
+                                </div>
+                            </div>
                         </div>
-                        <p className={styles.driverName}>Lando Norris</p>
-                        <p className={styles.driverPoints}>25 PT</p>
-                    </div>
+                    )}
 
-                    {/* Segundo lugar */}
-                    <div className={`${styles.driver} ${styles.second}`}>
-                        <div className={styles.driverImgContainer}>
-                            <img
-                                src="/imagenes/bichito.jpg"
-                                alt="Oscar Piastri"
-                                className={styles.driverImg}
-                            />
+                    {puntajes[0] && (
+                        <div className={`${styles.tarjetaPodio} ${styles.primerLugar}`}>
+                            <div className={styles.numeroPosicion}>1</div>
+                            <div className={styles.contenedorImagenJugador}>
+                                <img src="/imagenes/primerLugar.avif" alt={puntajes[0].usuario} className={styles.imagenJugador} />
+                            </div>
+                            <div className={styles.infoJugador}>
+                                <div className={styles.nombreJugador}>{puntajes[0].usuario}</div>
+                                <div className={styles.puntosJugador}>
+                                    <span className={styles.numeroPuntos}>{puntajes[0].partidas_ganadas}</span>
+                                    <span className={styles.etiquetaPuntos}>PTS</span>
+                                </div>
+                            </div>
+                            <div className={styles.corona}>👑</div>
                         </div>
-                        <p className={styles.driverName}>Oscar Piastri</p>
-                        <p className={styles.driverPoints}>18 PT</p>
-                    </div>
+                    )}
 
-                    {/* Tercer lugar */}
-                    <div className={`${styles.driver} ${styles.third}`}>
-                        <div className={styles.driverImgContainer}>
-                            <img
-                                src="/imagenes/bichito.jpg"
-                                alt="Nico Hulkenberg"
-                                className={styles.driverImg}
-                            />
+                    {puntajes[2] && (
+                        <div className={`${styles.tarjetaPodio} ${styles.tercerLugar}`}>
+                            <div className={styles.numeroPosicion}>3</div>
+                            <div className={styles.contenedorImagenJugador}>
+                                <img src="/imagenes/tercerLugar.jpg" alt={puntajes[2].usuario} className={styles.imagenJugador} />
+                            </div>
+                            <div className={styles.infoJugador}>
+                                <div className={styles.nombreJugador}>{puntajes[2].usuario}</div>
+                                <div className={styles.puntosJugador}>
+                                    <span className={styles.numeroPuntos}>{puntajes[2].partidas_ganadas}</span>
+                                    <span className={styles.etiquetaPuntos}>PTS</span>
+                                </div>
+                            </div>
                         </div>
-                        <p className={styles.driverName}>Nico Hulkenberg</p>
-                        <p className={styles.driverPoints}>15 PT</p>
+                    )}
+                </div>
+            </div>
+
+            {puntajes.length > 3 && (
+                <div className={styles.seccionRanking}>
+                    <h2 className={styles.tituloRanking}>CLASIFICACIÓN COMPLETA</h2>
+                    <div className={styles.listaRanking}>
+                        {puntajes.slice(3).map((puntaje, index) => (
+                            <div key={puntaje.id_ganador} className={styles.itemRanking}>
+                                <div className={styles.posicionRanking}>{index + 4}</div>
+                                <div className={styles.nombreRanking}>{puntaje.usuario}</div>
+                                <div className={styles.puntosRanking}>
+                                    <span className={styles.numeroPuntosRanking}>{puntaje.partidas_ganadas}</span>
+                                    <span className={styles.etiquetaPuntosRanking}>PTS</span>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
+            )}
 
-                {/* Otros pilotos */}
-                <div className={styles.others}>
-                    {puntajes.slice(3).map((puntaje, index) => (
-                        <div key={index} className={styles.otherDriver}>
-                            <p className={styles.otherDriverName}>{puntaje.usuario}</p>
-                            <p className={styles.otherDriverTeam}>
-                                {puntaje.equipo} - {puntaje.partidas_ganadas} PT
-                            </p>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
-            <section className={styles.center}>
-                <button onClick={irAOtraPagina} className={styles.button}>
-                    ¡Comenzar Juego!
+            <div className={styles.contenedorBoton}>
+                <button onClick={irAOtraPagina} className={styles.boton}>
+                    ¡COMENZAR JUEGO!
                 </button>
-            </section>
-        </>
+            </div>
+        </div>
     );
 }

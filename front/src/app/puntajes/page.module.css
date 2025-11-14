@@ -1,138 +1,222 @@
-/* Contenedor principal */
-.podium {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-family: Arial, sans-serif;
-    background-color: #0c7272;
-    color: white;
-    padding: 2rem;
-    border-radius: 15px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+.contenedor {
+    min-height: 100vh;
+    background: linear-gradient(to bottom, #e0f7f7, #d0f0f0);
+    padding: 2rem 1rem;
 }
 
-.top3 {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    max-width: 900px;
-    margin-bottom: 2rem;
-}
-
-.driver {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+.encabezado {
+    background: #ffffff;
+    padding: 1.5rem 2rem;
+    border-radius: 12px;
+    margin: 0 auto 3rem auto;
+    max-width: 1200px;
     text-align: center;
 }
 
-.driver-img-container {
+.tituloEncabezado {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #2ba5a5;
+    letter-spacing: 2px;
+}
+
+.seccionPodio {
+    max-width: 1200px;
+    margin: 0 auto 4rem auto;
+}
+
+.contenedorPodio {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    align-items: flex-end;
+    padding: 0 1rem;
+}
+
+.tarjetaPodio {
+    position: relative;
+    border-radius: 16px;
+    padding: 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.primerLugar {
+    background: linear-gradient(135deg, #2ba5a5 0%, #2ba5a5 100%);
+    min-height: 380px;
+    order: 2;
+}
+
+.segundoLugar {
+    background: linear-gradient(135deg, #3dbdbd 0%, #5ecece 100%);
+    min-height: 340px;
+    order: 1;
+}
+
+.tercerLugar {
+    background: linear-gradient(135deg, #1a8d8d 0%, #2ba5a5 100%);
+    min-height: 320px;
+    order: 3;
+}
+
+.numeroPosicion {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: #ffffff;
+    background-color: #2ba5a5;
+    border: 4px solid #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.contenedorImagenJugador {
     width: 120px;
     height: 120px;
     border-radius: 50%;
-    margin-bottom: 10px;
-    background-color: #fff;
+    overflow: hidden;
+    border: 4px solid #ffffff;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.imagenJugador {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.infoJugador {
+    text-align: center;
+    color: #ffffff;
+}
+
+.nombreJugador {
+    font-size: 1.3rem;
+    font-weight: 900;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+}
+
+.puntosJugador {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.3rem;
+}
+
+.numeroPuntos {
+    font-size: 2.5rem;
+    font-weight: 900;
+}
+
+.etiquetaPuntos {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.corona {
+    font-size: 2rem;
+    position: absolute;
+    top: 10px;
+    right: 15px;
+}
+
+.seccionRanking {
+    max-width: 900px;
+    margin: 0 auto 3rem auto;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.tituloRanking {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #2ba5a5;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+.listaRanking {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.itemRanking {
+    display: grid;
+    grid-template-columns: 60px 1fr auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    background: #cafafa;
+    border-radius: 12px;
+    border: 2px solid #8ccfcf;
+}
+
+.posicionRanking {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #2ba5a5;
+    text-align: center;
+}
+
+.nombreRanking {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #212529;
+}
+
+.puntosRanking {
+    display: flex;
+    align-items: baseline;
+    gap: 0.25rem;
+    background: #8ed8d8;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+}
+
+.numeroPuntosRanking {
+    font-size: 1.3rem;
+    font-weight: 900;
+    color: #2ba5a5;
+}
+
+.etiquetaPuntosRanking {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #228b8b;
+}
+
+.contenedorBoton {
     display: flex;
     justify-content: center;
-    align-items: center;
-    overflow: hidden;
-}
-
-.driver-img {
-    width: 100%;
-    height: auto;
-    object-fit: cover;
-}
-
-.driver-name {
-    font-size: 1.4rem;
-    font-weight: bold;
-}
-
-.driver-points {
-    font-size: 1.1rem;
-    color: #fff;
-    margin-top: 0.5rem;
-}
-
-/* Estilos para el podio */
-.first {
-    background-color: #ff7f00;
-    padding: 1.5rem;
-    border-radius: 12px;
-}
-
-.second {
-    background-color: #ffb300;
-    padding: 1.5rem;
-    border-radius: 12px;
-}
-
-.third {
-    background-color: #00a859;
-    padding: 1.5rem;
-    border-radius: 12px;
-}
-
-/* Listado de otros pilotos */
-.others {
-    width: 100%;
-    max-width: 900px;
-    margin-top: 2rem;
-}
-
-.other-driver {
-    display: flex;
-    align-items: center;
-    margin: 15px 0;
-    justify-content: space-between;
-    background-color: #222;
-    padding: 10px;
-    border-radius: 8px;
-    color: #f5f5f5;
-}
-
-.other-driver-img {
-    width: 60px;
-    height: 60px;
-    object-fit: cover;
-    border-radius: 50%;
-    border: 2px solid #fff;
-    margin-right: 10px;
-}
-
-.other-driver-name {
-    font-size: 1.1rem;
-    font-weight: bold;
-}
-
-.other-driver-team {
-    font-size: 1rem;
-    color: #ddd;
-}
-
-/* Botón para comenzar */
-.center {
-    text-align: center;
     margin-top: 3rem;
 }
 
-.button {
-    padding: 12px 30px;
-    background-color: #0c7272;
-    color: #fff;
+.boton {
+    padding: 1.25rem 3rem;
+    font-size: 1.3rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #2ba5a5 0%, #228b8b 100%);
     border: none;
     border-radius: 12px;
+    color: #ffffff;
     cursor: pointer;
-    font-size: 1.2rem;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.button:hover {
-    background-color: #357ab7;
-    transform: scale(1.05);
-}
-
-.button:active {
-    transform: scale(1);
+    box-shadow: 0 4px 16px rgba(43, 165, 165, 0.3);
+    letter-spacing: 1px;
 }

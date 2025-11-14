@@ -13,7 +13,7 @@ var port = process.env.PORT || 4000;
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors({
-  origin: ["http://10.1.4.209:3000", "http://10.1.4.209:3001", "http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://10.1.4.209:3000", "http://10.1.4.209:3001", "http://localhost:3000", "http://localhost:3002", "http://localhost:3003"],
+  origin: ["http://192.168.0.235:3000", "http://192.168.0.235:3001", "http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://192.168.0.235:3000", "http://192.168.0.235:3001", "http://localhost:3000", "http://localhost:3002", "http://localhost:3003"],
   credentials: true
 }));
 
@@ -25,7 +25,7 @@ const server = app.listen(port, () => {
 
 const io = require('socket.io')(server, {
   cors: {
-    origin: ["http://192.168.159.1:3000", "http://192.168.159.1:3001", "http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://10.1.4.209:3000", "http://10.1.4.209:3001", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
+    origin: ["http://192.168.0.235:3000", "http://192.168.0.235:3001", "http://10.1.4.211:3000", "http://10.1.4.211:3001", "http://10.1.5.106:3000", "http://192.168.11.151:3000", "http://192.168.11.151:3001", "http://192.168.0.235:3000", "http://192.168.0.235:3001", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
   }
