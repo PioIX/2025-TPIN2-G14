@@ -376,7 +376,10 @@ export default function Home() {
                   </div>
                 </>
               ) : esperando === 2 ? (
-                <div>Esperando al otro jugador</div>
+                <div className={styles.esperando}>
+                  <img src="/imagenes/esperando.png" alt="Esperando al otro jugador"/>
+                  <h2>Esperando al otro jugador</h2>
+                </div>
               ) : null}
             </PopUp>
 

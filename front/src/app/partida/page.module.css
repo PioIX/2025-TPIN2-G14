@@ -282,3 +282,11 @@
     line-height: 1.5;
     margin: 0;
 }
+
+.popUpJuego{
+  display:flex;
+  justify-content: space-around;
+  align-items: center;
+  text-align: center;
+  color:#2ba5a5
+}
